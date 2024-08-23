@@ -72,7 +72,9 @@ class Archive(Pathlike):
 
 @dataclass
 class SAFE(Archive):
-
+    """
+    Dataclass encapsulating a .SAFE archive.
+    """
     __nlength = len("S2B_MSIL1C_20231004T103809_N0509_R008_T31TDG_20231004T141941.SAFE")
     __bnames = {"B01", "B02", "B03", "B04", "B05", "B06", "B07",
                 "B08", "B8A", "B09", "B10", "B11", "B12"}
@@ -87,8 +89,8 @@ class SAFE(Archive):
     acquisition_time: datetime = field(init=False)
     
     def __post_init__(self):
+        
         SAFE_archivename = split(self.path)[-1]
-
         if not len(SAFE_archivename) == self.__nlength:
             raise InconsistentFileType("File does not follow naming convention.")
 
@@ -117,10 +119,21 @@ class SAFE(Archive):
 
 @dataclass
 class SEN3(Archive):
-    manifest: File
-    img_data_dir: Dir
+    """
+    Dataclass encapsulating a .SEN3 archive.
+
+    geodetic files contain georeference information.
+    geometry files contain solar angles information.
+    """
+    __bnames = {"S1", "S2", "S3", "S4", "S5", "S6",
+                "S7", "S8", "S9", "F1", "F2"}
+    
+    longitude: Image = field(init=False)
+    latitude: Image = field(init=False)
+    elevation: Image = field(init=False)
+    bands: list[Image] = field(init=False)
 
     def __post_init__(self):
-        ...
+        geodetic = join(self, "geodetic_")
 
 
