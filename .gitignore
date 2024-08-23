@@ -1,10 +1,16 @@
+# Data related
+reference_file_formats/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
 # C extensions
+gdal/
+pyproj/
 *.so
+*.so.*
 
 # Distribution / packaging
 .Python
