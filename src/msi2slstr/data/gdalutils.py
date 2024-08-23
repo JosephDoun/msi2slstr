@@ -5,10 +5,10 @@ from osgeo.gdal import Dataset
 
 
 
-def build_unified_dataset(datasets: list[Dataset]) -> Dataset:
+def build_unified_dataset(*datasets: Dataset) -> Dataset:
     options = BuildVRTOptions(resolution="highest",
-                              separate=True)
-    return BuildVRT("/vsimem/mem_output.tif", datasets, options=options)
+                              separate=True)    
+    return BuildVRT("/vsimem/mem_output.vrt", list(datasets), options=options)
 
 
 def get_bounds(dataset: Dataset) -> tuple[int]:

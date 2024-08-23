@@ -89,7 +89,7 @@ class SAFE(Archive):
     acquisition_time: datetime = field(init=False)
     
     def __post_init__(self):
-        
+
         SAFE_archivename = split(self.path)[-1]
         if not len(SAFE_archivename) == self.__nlength:
             raise InconsistentFileType("File does not follow naming convention.")
