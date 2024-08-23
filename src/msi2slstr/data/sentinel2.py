@@ -1,14 +1,7 @@
 from dataclasses import dataclass
 from .dataclasses import SAFE
-from osgeo.gdal import Translate, TranslateOptions, BuildVRT, BuildVRTOptions
-from osgeo.gdal import Dataset
+from .gdalutils import build_unified_dataset
 
-
-
-def build_unified_dataset(datasets: list[Dataset]) -> Dataset:
-    options = BuildVRTOptions(resolution="highest",
-                              separate=True)
-    return BuildVRT("/vsimem/s2_mem_output.tif", datasets, options=options)
 
 
 @dataclass
