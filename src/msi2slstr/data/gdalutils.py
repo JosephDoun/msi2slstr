@@ -1,14 +1,19 @@
 from osgeo.gdal import BuildVRT, BuildVRTOptions
 from osgeo.gdal import Translate, TranslateOptions
 from osgeo.gdal import Warp, WarpOptions
-from osgeo.gdal import Dataset
+from osgeo.gdal import Dataset, GCPsToGeoTransform, GCP
 
 
 
 def build_unified_dataset(*datasets: Dataset) -> Dataset:
     options = BuildVRTOptions(resolution="highest",
-                              separate=True)    
+                              separate=True)
     return BuildVRT("/vsimem/mem_output.vrt", list(datasets), options=options)
+
+
+def geodetics_to_geotransform(*geodetics: Dataset) -> tuple[int]:
+    X, Y, Z = geodetics
+    return GCPsToGeoTransform
 
 
 def get_bounds(dataset: Dataset) -> tuple[int]:
@@ -24,9 +29,7 @@ def get_bounds(dataset: Dataset) -> tuple[int]:
 
 def crop_sen3_geometry(sen2: Dataset, sen3: Dataset) -> Dataset:
     # crop_b_to_a = Translate("/vsimem/mem_output.tif")
-    
     outputbounds = get_bounds(sen2)
-    
     options = WarpOptions(# creationOptions=["TILED=YES",
                           #                  "BLOCKXSIZE=16",
                           #                  "BLOCKYSIZE=16"],

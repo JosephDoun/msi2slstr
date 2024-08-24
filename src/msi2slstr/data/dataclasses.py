@@ -4,10 +4,11 @@ from typing import Any
 from datetime import datetime
 from xml.etree.ElementTree import ElementTree, Element, parse
 from dataclasses import dataclass, field
-from osgeo.gdal import Warp, WarpOptions, Open, GetDriverByName, Dataset
-from osgeo.gdal import Translate, TranslateOptions, BuildVRT, BuildVRTOptions
+from osgeo.gdal import Open, Dataset
 from os.path import isdir, join, exists, isfile, sep, split
 from os import PathLike
+
+from .gdalutils import geodetics_to_geotransform
 
 
 class InconsistentFileType(Exception):
@@ -132,8 +133,14 @@ class SEN3(Archive):
     latitude: Image = field(init=False)
     elevation: Image = field(init=False)
     bands: list[Image] = field(init=False)
+    geotransform: tuple[int] = field(init=False)
 
     def __post_init__(self):
-        geodetic = join(self, "geodetic_")
+        # Build GeoTransform from the AN grid.
+        elevation = Image(f'NETCDF:{join(self, "geodetic_an.nc")}:elevation_in')
+        longitude = Image(f'NETCDF:{join(self, "geodetic_an.nc")}:longtitude_in')
+        latitude  = Image(f'NETCDF:{join(self, "geodetic_an.nc")}:latitude_in')
+
+        # geodetic_in = join(self, "geodetic_in.nc")
 
 
