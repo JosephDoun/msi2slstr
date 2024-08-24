@@ -85,7 +85,7 @@ class NETCDFSubDataset:
     offset: float = field(init=False, default=.0)
     metadata: dict = field(init=False)
     
-    
+
     def __post_init__(self):
         # Assert direct invocation of NETCDF driver.
         assert self.path.startswith("NETCDF:"),\
@@ -163,11 +163,10 @@ class SEN3(Archive):
     __bnames = {"S1", "S2", "S3", "S4", "S5", "S6",
                 "S7", "S8", "S9", "F1", "F2"}
     
-    longitude: NETCDFSubDataset = field(init=False)
-    latitude: NETCDFSubDataset = field(init=False)
-    elevation: NETCDFSubDataset = field(init=False)
-    bands: list[Image] = field(init=False)
+    
+    bands: list[Image] = field(init=False, default_factory=list)
     geotransform: tuple[int] = field(init=False)
+    xfdumanifest: XML = field(init=False, default=None)
 
     def __post_init__(self):
         """
@@ -179,15 +178,4 @@ class SEN3(Archive):
         # TODO : Evaluate case
         """
         super().__post_init__()
-
-        # Build GeoTransform from the AN grid.
-        elevation = NETCDFSubDataset(f'NETCDF:"{join(self, "geodetic_an.nc")}":elevation_an')
-        longitude = NETCDFSubDataset(f'NETCDF:"{join(self, "geodetic_an.nc")}":longitude_an')
-        latitude  = NETCDFSubDataset(f'NETCDF:"{join(self, "geodetic_an.nc")}":latitude_an')
-
-        self.geotransform = geodetics_to_geotransform(longitude,
-                                                      latitude,
-                                                      elevation)
-        # geodetic_in = join(self, "geodetic_in.nc")
-
 
