@@ -4,6 +4,8 @@ from osgeo.gdal import Warp, WarpOptions
 from osgeo.gdal import Dataset, GCPsToGeoTransform, GCP
 from osgeo.gdal import GDT_Float32
 
+from numpy import ndarray
+
 
 
 def build_unified_dataset(*datasets: Dataset) -> Dataset:
@@ -40,13 +42,20 @@ def geodetics_to_geotransform(*geodetics: Dataset) -> tuple[int]:
     X, Y, Z = geodetics
     Xsize = X.RasterXSize
     Ysize = Y.RasterYSize
-    X = X.ReadAsArray().flatten()
-    Y = Y.ReadAsArray().flatten()
-    Z = Z.ReadAsArray().flatten()
-    GCPs = [
-        GCP(x=x, y=y, z=z, pixel=i % Xsize, line=i // Ysize)
-        for i, (x, y, z) in enumerate(zip(X, Y, Z))
-        ]
+    X: ndarray = X.ReadAsArray().flatten()
+    Y: ndarray = Y.ReadAsArray().flatten()
+    Z: ndarray = Z.ReadAsArray().flatten()
+    GCPs = []
+    
+    # for i, (x, y, z) in enumerate(zip(X, Y, Z)):
+    for i in range(0, X.size, 2):
+        z = float(min(9000, max(Z[i], 0)))
+        x = X[i] * 1e-6
+        y = Y[i] * 1e-6
+        #         x, y, z,     pixel,       line
+        gcp = GCP(x, y, z, i % Xsize, i // Ysize)
+        GCPs.append(gcp)
+
     return GCPsToGeoTransform(GCPs)
 
 

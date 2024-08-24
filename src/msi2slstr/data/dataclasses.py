@@ -72,12 +72,29 @@ class Archive(Pathlike):
 
 @dataclass
 class NETCDFSubDataset:
+
+    """
+    Class encapsulating NETCDF subdatasets that are normally
+    scaled and offset for efficiency.
+    """
+
     path: str = field(init=True)
+    dataset: Dataset = field(init=False)
     name: str = field(init=False)
-    scale: float = field(init=False)
-    offset: float = field(init=False)
+    scale: float = field(init=False, default=1.)
+    offset: float = field(init=False, default=.0)
+    
     def __post_init__(self):
-        ...
+        # Assert direct invocation of NETCDF driver.
+        assert self.path.startswith("NETCDF:"),\
+            "NETCDF:\"<path-to-file>\":<subdataset-name> format expected."
+
+        self.dataset = Open(self.path)
+        assert self.dataset,\
+            "Incorrect path to NETCDF subdataset:\n"\
+            "NETCDF:\"<path-to-file>\":<subdataset-name> format expected."
+        
+        self.name = self.path.split(":")[-1]
 
 
 @dataclass
@@ -141,9 +158,9 @@ class SEN3(Archive):
     __bnames = {"S1", "S2", "S3", "S4", "S5", "S6",
                 "S7", "S8", "S9", "F1", "F2"}
     
-    longitude: Image = field(init=False)
-    latitude: Image = field(init=False)
-    elevation: Image = field(init=False)
+    longitude: NETCDFSubDataset = field(init=False)
+    latitude: NETCDFSubDataset = field(init=False)
+    elevation: NETCDFSubDataset = field(init=False)
     bands: list[Image] = field(init=False)
     geotransform: tuple[int] = field(init=False)
 
@@ -158,10 +175,13 @@ class SEN3(Archive):
         """
         super().__post_init__()
         # Build GeoTransform from the AN grid.
-        elevation = Image(f'NETCDF:"{join(self, "geodetic_an.nc")}":elevation_an')
-        longitude = Image(f'NETCDF:"{join(self, "geodetic_an.nc")}":longtitude_an')
-        latitude  = Image(f'NETCDF:"{join(self, "geodetic_an.nc")}":latitude_an')
-        self.geotransform = geodetics_to_geotransform(longitude, latitude, elevation)
+        elevation = NETCDFSubDataset(f'NETCDF:"{join(self, "geodetic_an.nc")}":elevation_an')
+        longitude = NETCDFSubDataset(f'NETCDF:"{join(self, "geodetic_an.nc")}":longitude_an')
+        latitude  = NETCDFSubDataset(f'NETCDF:"{join(self, "geodetic_an.nc")}":latitude_an')
+
+        self.geotransform = geodetics_to_geotransform(longitude.dataset,
+                                                      latitude.dataset,
+                                                      elevation.dataset)
         # geodetic_in = join(self, "geodetic_in.nc")
 
 
