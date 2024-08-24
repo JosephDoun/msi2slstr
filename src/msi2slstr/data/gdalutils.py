@@ -41,10 +41,17 @@ def geodetics_to_geotransform(*geodetics: NETCDFSubDataset) -> tuple[int]:
     # Will fail if number of elements differs.
     latitude, longitude, elevation = geodetics
     
+    # Scale of data.
     scaleX = latitude.scale
     scaleY = longitude.scale
     scaleZ = elevation.scale
 
+    # Offset of data.
+    offsetX = latitude.offset
+    offsetY = longitude.offset
+    offsetZ = elevation.offset
+
+    # Dimensions of array. Assumes all 3 have equal dimensions.
     Xsize = latitude.dataset.RasterXSize
     Ysize = latitude.dataset.RasterYSize
 
