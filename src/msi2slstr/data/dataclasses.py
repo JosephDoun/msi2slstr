@@ -38,6 +38,14 @@ class File(Pathlike):
         super().__post_init__()
         assert isfile(self.path), f"{self.path} is not a file."
 
+@dataclass
+class Dir(Pathlike):
+    path: str
+
+    def __post_init__(self):
+        if self.path.endswith(sep): self.path = self.path[:-1]
+        assert isdir(self.path), f"{self} is not a directory."
+
 
 @dataclass
 class XML(File, ElementTree):
@@ -58,17 +66,18 @@ class Image(File):
 
 
 @dataclass
-class Dir(Pathlike):
-    path: str
-
-    def __post_init__(self):
-        if self.path.endswith(sep): self.path = self.path[:-1]
-        assert isdir(self.path), f"{self} is not a directory."
+class Archive(Pathlike):
+    path: Dir
 
 
 @dataclass
-class Archive(Pathlike):
-    path: Dir
+class NETCDFSubDataset:
+    path: str = field(init=True)
+    name: str = field(init=False)
+    scale: float = field(init=False)
+    offset: float = field(init=False)
+    def __post_init__(self):
+        ...
 
 
 @dataclass
@@ -81,16 +90,15 @@ class SAFE(Archive):
                 "B08", "B8A", "B09", "B10", "B11", "B12"}
 
     manifest: File = field(init=False)
-    mtd_msil1c: File = field(init=False)
-    img_data_dir: Dir = field(init=False)
-    datastrip: Dir = field(init=False)
+    MTD_file: File = field(init=False)
+    # datastrip: Dir = field(init=False)
     bands: list[File] = field(init=False, default_factory=list)
-    product: str = field(init=False)
-    tile: str = field(init=False)
-    acquisition_time: datetime = field(init=False)
+    product: str = field(init=False, default="")
+    tile: str = field(init=False, default="")
+    acquisition_time: datetime = field(init=False, default=datetime(2000, 1, 1))
     
     def __post_init__(self):
-
+        super().__post_init__()
         SAFE_archivename = split(self.path)[-1]
         if not len(SAFE_archivename) == self.__nlength:
             raise InconsistentFileType("File does not follow naming convention.")
@@ -121,10 +129,14 @@ class SAFE(Archive):
 @dataclass
 class SEN3(Archive):
     """
-    Dataclass encapsulating a .SEN3 archive.
+    Dataclass encapsulating a `.SEN3` archive.
 
-    geodetic files contain georeference information.
-    geometry files contain solar angles information.
+    `geodetic` files contain georeference information:
+        `an` grid is the most detailed addressing optical bands.
+        `in` grid is half resolution addressing thermal bands.
+        `fn` grid is identical to `in` apart from slight offset.
+
+    `geometry` files contain solar angles information.
     """
     __bnames = {"S1", "S2", "S3", "S4", "S5", "S6",
                 "S7", "S8", "S9", "F1", "F2"}
@@ -136,11 +148,20 @@ class SEN3(Archive):
     geotransform: tuple[int] = field(init=False)
 
     def __post_init__(self):
-        # Build GeoTransform from the AN grid.
-        elevation = Image(f'NETCDF:{join(self, "geodetic_an.nc")}:elevation_in')
-        longitude = Image(f'NETCDF:{join(self, "geodetic_an.nc")}:longtitude_in')
-        latitude  = Image(f'NETCDF:{join(self, "geodetic_an.nc")}:latitude_in')
+        """
+        Needs to build a VRT with all bands properly georeferenced.
 
+        We can probably get away with only using the `an` grid to
+        build a common geotransformation.
+
+        # TODO : Evaluate case
+        """
+        super().__post_init__()
+        # Build GeoTransform from the AN grid.
+        elevation = Image(f'NETCDF:"{join(self, "geodetic_an.nc")}":elevation_an')
+        longitude = Image(f'NETCDF:"{join(self, "geodetic_an.nc")}":longtitude_an')
+        latitude  = Image(f'NETCDF:"{join(self, "geodetic_an.nc")}":latitude_an')
+        self.geotransform = geodetics_to_geotransform(longitude, latitude, elevation)
         # geodetic_in = join(self, "geodetic_in.nc")
 
 
