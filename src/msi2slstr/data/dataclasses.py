@@ -83,6 +83,8 @@ class NETCDFSubDataset:
     name: str = field(init=False)
     scale: float = field(init=False, default=1.)
     offset: float = field(init=False, default=.0)
+    metadata: dict = field(init=False)
+    
     
     def __post_init__(self):
         # Assert direct invocation of NETCDF driver.
@@ -95,6 +97,9 @@ class NETCDFSubDataset:
             "NETCDF:\"<path-to-file>\":<subdataset-name> format expected."
         
         self.name = self.path.split(":")[-1]
+        self.metadata = self.dataset.GetMetadata()
+        self.scale = float(self.metadata.get(f"{self.name}#scale_factor"))
+        self.offset = float(self.metadata.get(f"{self.name}#add_offset"))
 
 
 @dataclass
@@ -174,14 +179,15 @@ class SEN3(Archive):
         # TODO : Evaluate case
         """
         super().__post_init__()
+
         # Build GeoTransform from the AN grid.
         elevation = NETCDFSubDataset(f'NETCDF:"{join(self, "geodetic_an.nc")}":elevation_an')
         longitude = NETCDFSubDataset(f'NETCDF:"{join(self, "geodetic_an.nc")}":longitude_an')
         latitude  = NETCDFSubDataset(f'NETCDF:"{join(self, "geodetic_an.nc")}":latitude_an')
 
-        self.geotransform = geodetics_to_geotransform(longitude.dataset,
-                                                      latitude.dataset,
-                                                      elevation.dataset)
+        self.geotransform = geodetics_to_geotransform(longitude,
+                                                      latitude,
+                                                      elevation)
         # geodetic_in = join(self, "geodetic_in.nc")
 
 

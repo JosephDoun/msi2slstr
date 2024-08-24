@@ -5,7 +5,7 @@ from osgeo.gdal import Dataset, GCPsToGeoTransform, GCP
 from osgeo.gdal import GDT_Float32
 
 from numpy import ndarray
-
+from .typing import NETCDFSubDataset
 
 
 def build_unified_dataset(*datasets: Dataset) -> Dataset:
@@ -31,7 +31,7 @@ def load_unscaled_S3_data(*datasets: Dataset | str) -> list[Dataset]:
     return virtual_load
 
 
-def geodetics_to_geotransform(*geodetics: Dataset) -> tuple[int]:
+def geodetics_to_geotransform(*geodetics: NETCDFSubDataset) -> tuple[int]:
     """
     Return a geotransformation according to a collection of GCPs.
 
@@ -39,19 +39,26 @@ def geodetics_to_geotransform(*geodetics: Dataset) -> tuple[int]:
     that contain the geoinformation in arrays.
     """
     # Will fail if number of elements differs.
-    X, Y, Z = geodetics
-    Xsize = X.RasterXSize
-    Ysize = Y.RasterYSize
-    X: ndarray = X.ReadAsArray().flatten()
-    Y: ndarray = Y.ReadAsArray().flatten()
-    Z: ndarray = Z.ReadAsArray().flatten()
+    latitude, longitude, elevation = geodetics
+    
+    scaleX = latitude.scale
+    scaleY = longitude.scale
+    scaleZ = elevation.scale
+
+    Xsize = latitude.dataset.RasterXSize
+    Ysize = latitude.dataset.RasterYSize
+
+    X: ndarray = latitude.dataset.ReadAsArray().flatten()
+    Y: ndarray = longitude.dataset.ReadAsArray().flatten()
+    Z: ndarray = elevation.dataset.ReadAsArray().flatten()
+
     GCPs = []
     
-    # for i, (x, y, z) in enumerate(zip(X, Y, Z)):
     for i in range(0, X.size, 2):
-        z = float(min(9000, max(Z[i], 0)))
-        x = X[i] * 1e-6
-        y = Y[i] * 1e-6
+        z = float(min(9000, max(Z[i] * scaleZ, 0)))
+        x = X[i] * scaleX
+        y = Y[i] * scaleY
+        # GCP constructor positional arguments:
         #         x, y, z,     pixel,       line
         gcp = GCP(x, y, z, i % Xsize, i // Ysize)
         GCPs.append(gcp)
