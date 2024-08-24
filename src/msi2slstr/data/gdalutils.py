@@ -2,6 +2,7 @@ from osgeo.gdal import BuildVRT, BuildVRTOptions
 from osgeo.gdal import Translate, TranslateOptions
 from osgeo.gdal import Warp, WarpOptions
 from osgeo.gdal import Dataset, GCPsToGeoTransform, GCP
+from osgeo.gdal import GDT_Float32
 
 
 
@@ -11,9 +12,42 @@ def build_unified_dataset(*datasets: Dataset) -> Dataset:
     return BuildVRT("/vsimem/mem_output.vrt", list(datasets), options=options)
 
 
+def load_unscaled_S3_data(*datasets: Dataset | str) -> list[Dataset]:
+    """
+    Record unscaling as a preprocessing workflow
+    and change to proper datatype.
+    """
+    options = TranslateOptions(unscale=True,
+                               format="VRT",
+                               outputType=GDT_Float32,
+                               noData=-32768)
+    virtual_load = []
+    for dataset in datasets:
+        virtual_load.append(Translate("/vsimem/mem_out.vrt",
+                                      dataset,
+                                      options=options))
+    return virtual_load
+
+
 def geodetics_to_geotransform(*geodetics: Dataset) -> tuple[int]:
+    """
+    Return a geotransformation according to a collection of GCPs.
+
+    Use case expects X, Y, Z to be provided in separate dataset objects
+    that contain the geoinformation in arrays.
+    """
+    # Will fail if number of elements differs.
     X, Y, Z = geodetics
-    return GCPsToGeoTransform
+    Xsize = X.RasterXSize
+    Ysize = Y.RasterYSize
+    X = X.ReadAsArray().flatten()
+    Y = Y.ReadAsArray().flatten()
+    Z = Z.ReadAsArray().flatten()
+    GCPs = [
+        GCP(x=x, y=y, z=z, pixel=i % Xsize, line=i // Ysize)
+        for i, (x, y, z) in enumerate(zip(X, Y, Z))
+        ]
+    return GCPsToGeoTransform(GCPs)
 
 
 def get_bounds(dataset: Dataset) -> tuple[int]:
