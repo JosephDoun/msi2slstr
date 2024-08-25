@@ -160,13 +160,12 @@ class SEN3(Archive):
 
     `geometry` files contain solar angles information.
     """
-    __bnames = {"S1", "S2", "S3", "S4", "S5", "S6",
-                "S7", "S8", "S9", "F1", "F2"}
+
     
     
     bands: list[Image] = field(init=False, default_factory=list)
     geotransform: tuple[int] = field(init=False)
-    xfdumanifest: XML = field(init=False, default=None)
+    xfdumanifest: XML = field(init=False)
 
     def __post_init__(self):
         """
@@ -178,4 +177,5 @@ class SEN3(Archive):
         # TODO : Evaluate case
         """
         super().__post_init__()
+        self.xfdumanifest = XML(join(self, "xfdumanifest.xml"))
 
