@@ -1,7 +1,55 @@
-from dataclasses import dataclass
-from .dataclasses import SEN3, NETCDFSubDataset, File, join, split
+from dataclasses import dataclass, field
+from .dataclasses import NETCDFSubDataset, Archive, File, XML, join, split
+from .gdalutils import load_unscaled_S3_data
 from .gdalutils import geodetics_to_geotransform
+from .gdalutils import build_unified_dataset
 
+
+
+@dataclass
+class SEN3Bands:
+    bands: tuple[NETCDFSubDataset] = field(default_factory=load_unscaled_S3_data)
+
+    def __iter__(self):
+        return (b for b in self.bands)
+    
+    def __getitem__(self, index: int | slice):
+        return self.bands[index]
+
+
+@dataclass
+class SEN3(Archive):
+    """
+    Dataclass encapsulating a `.SEN3` archive.
+
+    `geodetic` files contain georeference information:
+        `an` grid is the most detailed addressing optical bands.
+        `in` grid is half resolution addressing thermal bands.
+        `fn` grid is identical to `in` apart from slight offset.
+
+    `geometry` files contain solar angles information.
+    """
+    
+    bands: SEN3Bands = field(init=False)
+    geotransform: tuple[int] = field(init=False)
+    xfdumanifest: XML = field(init=False)
+
+    def __post_init__(self):
+        """
+        Needs to build a VRT with all bands properly georeferenced.
+
+        We can probably get away with only using the `an` grid to
+        build a common geotransformation.
+
+        # TODO : Evaluate case
+        """
+        super().__post_init__()
+        self.xfdumanifest = XML(join(self, "xfdumanifest.xml"))
+
+        self.data_files = [
+            # Index 2 returns the `dataObject` section.
+            File(join(self, e[0][0].get("href"))) for e in self.xfdumanifest[2]
+            ]
 
 
 @dataclass
@@ -31,8 +79,11 @@ class Sentinel3RBT(SEN3):
         assert len(_band_files) == len(self.__bnames), "Unexpected number of bands."
                 
         subdatasetname = lambda p: split(p)[-1].split(".")[-2]
-        self.bands = tuple(
+        
+        bands = SEN3Bands(tuple(
             NETCDFSubDataset(f'NETCDF:"{p}":{subdatasetname(p)}')
             for p in _band_files
-        )
+        ))
+
+        self.dataset = build_unified_dataset(*map(lambda x: x.dataset, bands))
         
