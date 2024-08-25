@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from .dataclasses import SEN3, NETCDFSubDataset, join
+from .dataclasses import SEN3, NETCDFSubDataset, File, join
 from .gdalutils import geodetics_to_geotransform
 
 
@@ -20,5 +20,4 @@ class Sentinel3RBT(SEN3):
                                                       latitude,
                                                       elevation)
         
-        data = [... for e in self.xfdumanifest[2]]
-        
+        self.data = [File(join(self, e[0][0].get("href"))) for e in self.xfdumanifest.root[2]]

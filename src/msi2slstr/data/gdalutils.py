@@ -31,7 +31,8 @@ def load_unscaled_S3_data(*datasets: Dataset | str) -> list[Dataset]:
     return virtual_load
 
 
-def geodetics_to_geotransform(*geodetics: NETCDFSubDataset) -> tuple[int]:
+def geodetics_to_geotransform(*geodetics: NETCDFSubDataset,
+                              grid_dilation: int = 2) -> tuple[int]:
     """
     Return a geotransformation according to a collection of GCPs.
 
@@ -61,7 +62,7 @@ def geodetics_to_geotransform(*geodetics: NETCDFSubDataset) -> tuple[int]:
 
     GCPs = []
     
-    for i in range(0, X.size, 2):
+    for i in range(0, X.size, grid_dilation):
         z = float(min(9000, max(Z[i] * scaleZ, 0)))
         x = X[i] * scaleX
         y = Y[i] * scaleY
