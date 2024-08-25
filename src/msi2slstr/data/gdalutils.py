@@ -37,6 +37,8 @@ def load_unscaled_S3_data(*datasets: Dataset | str) -> list[Dataset]:
         virtual_load.append(Translate("/vsimem/mem_out.vrt",
                                       dataset,
                                       options=options))
+        print("unscaling")
+        
     return virtual_load
 
 
