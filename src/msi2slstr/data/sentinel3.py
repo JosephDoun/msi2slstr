@@ -5,6 +5,7 @@ from .gdalutils import geodetics_to_geotransform
 from .gdalutils import build_unified_dataset
 from .gdalutils import Dataset
 
+from osgeo.osr import SpatialReference, SRS_DN_WGS84
 
 
 @dataclass
@@ -34,7 +35,6 @@ class SEN3(Archive):
     `geometry` files contain solar angles information.
     """
     
-    bands: SEN3Bands = field(init=False)
     geotransform: tuple[int] = field(init=False)
     xfdumanifest: XML = field(init=False)
 
@@ -64,6 +64,8 @@ class Sentinel3RBT(SEN3):
                 "S7_BT_in", "S8_BT_in", "S9_BT_in",
                 "F1_BT_fn", "F2_BT_in"}
     
+    dataset: Dataset = field(init=False)
+
     def __post_init__(self):
         super().__post_init__()
         
@@ -88,6 +90,12 @@ class Sentinel3RBT(SEN3):
             NETCDFSubDataset(f'NETCDF:"{p}":{subdatasetname(p)}')
             for p in _band_files
         ))
+        srs = SpatialReference()
+        srs.ImportFromEPSG(4326)
+        
+        for b in self.bands:
+            b.SetSpatialRef(srs)
+            b.SetGeoTransform(self.geotransform)
 
         self.dataset = build_unified_dataset(*self.bands)
         
