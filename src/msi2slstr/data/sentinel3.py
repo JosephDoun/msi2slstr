@@ -3,12 +3,16 @@ from .dataclasses import NETCDFSubDataset, Archive, File, XML, join, split
 from .gdalutils import load_unscaled_S3_data
 from .gdalutils import geodetics_to_geotransform
 from .gdalutils import build_unified_dataset
+from .gdalutils import Dataset
 
 
 
 @dataclass
 class SEN3Bands:
-    bands: tuple[NETCDFSubDataset] = field(default_factory=load_unscaled_S3_data)
+    bands: tuple[Dataset] = field()
+
+    def __post_init__(self):
+        self.bands = load_unscaled_S3_data(*(x.dataset for x in self.bands))
 
     def __iter__(self):
         return (b for b in self.bands)
@@ -80,10 +84,10 @@ class Sentinel3RBT(SEN3):
                 
         subdatasetname = lambda p: split(p)[-1].split(".")[-2]
         
-        bands = SEN3Bands(tuple(
+        self.bands = SEN3Bands(tuple(
             NETCDFSubDataset(f'NETCDF:"{p}":{subdatasetname(p)}')
             for p in _band_files
         ))
 
-        self.dataset = build_unified_dataset(*map(lambda x: x.dataset, bands))
+        self.dataset = build_unified_dataset(*self.bands)
         
