@@ -1,13 +1,17 @@
 from dataclasses import dataclass
-from .dataclasses import SEN3, NETCDFSubDataset, File, join
+from .dataclasses import SEN3, NETCDFSubDataset, File, join, split
 from .gdalutils import geodetics_to_geotransform
 
 
 
 @dataclass
 class Sentinel3RBT(SEN3):
-    __bnames = {"S1", "S2", "S3", "S4", "S5", "S6",
-                "S7", "S8", "S9", "F1", "F2"}
+    __bnames = {"S1_radiance_an", "S2_radiance_an",
+                "S3_radiance_an", "S4_radiance_an",
+                "S5_radiance_an", "S6_radiance_an",
+                "S7_BT_in", "S8_BT_in", "S9_BT_in",
+                "F1_BT_fn", "F2_BT_in"}
+    
     def __post_init__(self):
         super().__post_init__()
         
@@ -18,6 +22,17 @@ class Sentinel3RBT(SEN3):
 
         self.geotransform = geodetics_to_geotransform(longitude,
                                                       latitude,
-                                                      elevation)
+                                                      elevation,
+                                                      grid_dilation=5)
         
-        self.data = [File(join(self, e[0][0].get("href"))) for e in self.xfdumanifest.root[2]]
+        condition = lambda x: any([x.path.endswith(f"{b}.nc") for b in self.__bnames])
+        _band_files = tuple(filter(condition, self.data_files))
+
+        assert len(_band_files) == len(self.__bnames), "Unexpected number of bands."
+                
+        subdatasetname = lambda p: split(p)[-1].split(".")[-2]
+        self.bands = tuple(
+            NETCDFSubDataset(f'NETCDF:"{p}":{subdatasetname(p)}')
+            for p in _band_files
+        )
+        

@@ -9,8 +9,17 @@ from .typing import NETCDFSubDataset
 
 
 def build_unified_dataset(*datasets: Dataset) -> Dataset:
-    options = BuildVRTOptions(resolution="highest",
-                              separate=True)
+    """
+    Combine an array of datasets into a Virtual dataset.
+
+    Args
+    ----
+        :param datasets: A collection of gdal Dataset objects to
+            combine in a virtual dataset.
+
+    :returns: A virtual in-memory gdal.Dataset combining the inputs.
+    """
+    options = BuildVRTOptions(resolution="highest", separate=True)
     return BuildVRT("/vsimem/mem_output.vrt", list(datasets), options=options)
 
 

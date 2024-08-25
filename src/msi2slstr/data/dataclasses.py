@@ -84,9 +84,9 @@ class NETCDFSubDataset:
     path: str = field(init=True)
     dataset: Dataset = field(init=False)
     name: str = field(init=False)
-    scale: float = field(init=False, default=1.)
-    offset: float = field(init=False, default=.0)
-    metadata: dict = field(init=False)
+    scale: float = field(init=False, default=1., repr=False)
+    offset: float = field(init=False, default=.0, repr=False)
+    metadata: dict = field(init=False, repr=False)
     
 
     def __post_init__(self):
@@ -181,4 +181,10 @@ class SEN3(Archive):
         """
         super().__post_init__()
         self.xfdumanifest = XML(join(self, "xfdumanifest.xml"))
+
+        self.data_files = [
+            File(join(self, e[0][0].get("href"))) for e in self.xfdumanifest[2]
+            ]
+        
+        
 
