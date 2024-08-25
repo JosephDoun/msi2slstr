@@ -55,6 +55,9 @@ class XML(File, ElementTree):
         self.parse(self.path)
         self.root = self.getroot()
 
+    def __getitem__(self, index: int):
+        return self.root[index]
+
 
 @dataclass
 class Image(File):
