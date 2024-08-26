@@ -1,6 +1,7 @@
 # Data related
 reference_file_formats/
 *.tif
+*.vrt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

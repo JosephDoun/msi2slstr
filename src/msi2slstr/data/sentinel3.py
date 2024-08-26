@@ -1,9 +1,11 @@
 from dataclasses import dataclass, field
 from .dataclasses import NETCDFSubDataset, Archive, File, XML, join, split
 from .gdalutils import load_unscaled_S3_data
-from .gdalutils import geodetics_to_gcps
+from .gdalutils import geodetics_to_gcps, execute_geolocation
 from .gdalutils import build_unified_dataset
 from .gdalutils import Dataset
+
+from .vrt_geolocation import set_geolocation_domain
 
 
 @dataclass
@@ -12,7 +14,9 @@ class SEN3Bands:
     bands: tuple[Dataset]
     
     def __post_init__(self):
-        self.bands = load_unscaled_S3_data(*self.bands)
+        set_geolocation_domain(*self.bands)
+        load_unscaled_S3_data(*self.bands)
+        execute_geolocation(*self.bands)
 
     def __iter__(self):
         return (b for b in self.bands)
@@ -89,5 +93,5 @@ class Sentinel3RBT(SEN3):
             for p in _band_files
         ))
 
-        self.dataset = build_unified_dataset(*self.bands)
+        self.dataset = build_unified_dataset(*map(lambda x: x.dataset, self.bands))
         

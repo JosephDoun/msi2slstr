@@ -1,8 +1,11 @@
 from osgeo.gdal import BuildVRT, BuildVRTOptions
 from osgeo.gdal import Translate, TranslateOptions
 from osgeo.gdal import Warp, WarpOptions
-from osgeo.gdal import Dataset, GCPsToGeoTransform, GCP
+from osgeo.gdal import Dataset, GCP
 from osgeo.gdal import GDT_Float32
+from osgeo.gdal import Open, OpenEx
+from osgeo.gdal import VSIFCloseL, VSIFOpenL, VSILFILE
+from osgeo.gdal_array import VirtualMem
 
 from numpy import ndarray
 from .typing import NETCDFSubDataset
@@ -20,11 +23,16 @@ def build_unified_dataset(*datasets: Dataset) -> Dataset:
     :returns: A virtual in-memory gdal.Dataset combining the inputs.
     """
     options = BuildVRTOptions(resolution="highest", separate=True)
+
+    vrt = BuildVRT(f"/vsimem/mem_{len(datasets)}.vrt",
+                   list(datasets), options=options)
+        
     for dataset in datasets:
         print(dataset.GetDescription(), dataset.RasterCount, dataset.RasterXSize, dataset.RasterYSize)
-        print(dataset.GetGeoTransform())
+        print(dataset.GetGeoTransform(), dataset.GetProjectionRef())
 
-    return BuildVRT("/vsimem/mem_output.vrt", list(datasets), options=options)
+    options = TranslateOptions()
+    return Translate(f"built{len(datasets)}.tif", vrt, options=options)
 
 
 def load_unscaled_S3_data(*netcdfs: NETCDFSubDataset | str) -> list[Dataset]:
@@ -32,22 +40,30 @@ def load_unscaled_S3_data(*netcdfs: NETCDFSubDataset | str) -> list[Dataset]:
     Record unscaling as a preprocessing workflow
     and change to proper datatype.
     """
-    
-    virtual_load = []
     for netcdf in netcdfs:
-        print(netcdf.name)
+        
         options = TranslateOptions(unscale=True,
                                    format="VRT",
                                    outputType=GDT_Float32,
                                    noData=-32768,
-                                   outputSRS="EPSG:4326",
-                                   GCPs=netcdf.GCPs)
-        ds = Translate("/vsimem/mem_out.vrt", netcdf.dataset, options=options)
+                                   outputSRS="EPSG:4326")
         
-        options = WarpOptions(dstSRS="EPSG:4326", multithread=True)
-        virtual_load.append(Warp("/vsimem/projected.vrt", ds, options=options))
+        ds: Dataset = Translate(f"/vsimem/unscaled_{netcdf.name}.vrt",
+                                netcdf.dataset,
+                                options=options)
+                
+        netcdf.dataset = ds
         
-    return virtual_load
+        
+def execute_geolocation(*netcdfs: NETCDFSubDataset):
+    """
+    Simply runs Warp with the geoloc switch activated.
+    """
+    for netcdf in netcdfs:
+        print("geolocating:", netcdf.name)
+        netcdf.dataset = Warp(f"/vsimem/geolocated_{netcdf.name}.vrt",
+                              netcdf.dataset,
+                              geoloc=True)
 
 
 def geodetics_to_gcps(*geodetics: NETCDFSubDataset,
@@ -80,13 +96,16 @@ def geodetics_to_gcps(*geodetics: NETCDFSubDataset,
     Z: ndarray = elevation.dataset.ReadAsArray().flatten()
 
     GCPs = []
-
+    
     for i in range(0, X.size, grid_dilation):
-        z = float(min(9000, max(Z[i] * scaleZ + offsetZ, 0)))
+
+        z = Z[i] * scaleZ + offsetZ
         x = X[i] * scaleX + offsetX
         y = Y[i] * scaleY + offsetY
-        print(x, y, z, i % Xsize, i // Ysize)
-        print(scaleX, scaleY, scaleZ)
+
+        if 0 > z > 9000: continue
+        if -90 > x > 90: continue
+        if -180 > y > 180: continue
 
         # GCP constructor positional arguments:
         #         x, y, z,     pixel,       line
@@ -115,6 +134,7 @@ def get_bounds(dataset: Dataset) -> tuple[int]:
 def crop_sen3_geometry(sen2: Dataset, sen3: Dataset) -> Dataset:
     # crop_b_to_a = Translate("/vsimem/mem_output.tif")
     outputbounds = get_bounds(sen2)
+    print("Warping reprojected Sen3")
     options = WarpOptions(# creationOptions=["TILED=YES",
                           #                  "BLOCKXSIZE=16",
                           #                  "BLOCKYSIZE=16"],
