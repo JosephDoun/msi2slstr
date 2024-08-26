@@ -44,7 +44,7 @@ def load_unscaled_S3_data(*netcdfs: NETCDFSubDataset | str) -> list[Dataset]:
                                    GCPs=netcdf.GCPs)
         ds = Translate("/vsimem/mem_out.vrt", netcdf.dataset, options=options)
         
-        options = WarpOptions(dstSRS="EPSG:4326")
+        options = WarpOptions(dstSRS="EPSG:4326", multithread=True)
         virtual_load.append(Warp("/vsimem/projected.vrt", ds, options=options))
         
     return virtual_load
@@ -59,32 +59,34 @@ def geodetics_to_gcps(*geodetics: NETCDFSubDataset,
     that contain the geoinformation in arrays.
     """
     # Will fail if number of elements differs.
-    latitude, longitude, elevation = geodetics
+    longitude, latitude, elevation = geodetics
     
     # Scale of data.
-    scaleX = latitude.scale
-    scaleY = longitude.scale
+    scaleX = longitude.scale
+    scaleY = latitude.scale
     scaleZ = elevation.scale
 
     # Offset of data.
-    offsetX = latitude.offset
-    offsetY = longitude.offset
+    offsetX = longitude.offset
+    offsetY = latitude.offset
     offsetZ = elevation.offset
 
     # Dimensions of array. Assumes all 3 have equal dimensions.
     Xsize = latitude.dataset.RasterXSize
     Ysize = latitude.dataset.RasterYSize
 
-    X: ndarray = latitude.dataset.ReadAsArray().flatten()
-    Y: ndarray = longitude.dataset.ReadAsArray().flatten()
+    X: ndarray = longitude.dataset.ReadAsArray().flatten()
+    Y: ndarray = latitude.dataset.ReadAsArray().flatten()
     Z: ndarray = elevation.dataset.ReadAsArray().flatten()
 
     GCPs = []
-    
+
     for i in range(0, X.size, grid_dilation):
         z = float(min(9000, max(Z[i] * scaleZ + offsetZ, 0)))
         x = X[i] * scaleX + offsetX
         y = Y[i] * scaleY + offsetY
+        print(x, y, z, i % Xsize, i // Ysize)
+        print(scaleX, scaleY, scaleZ)
 
         # GCP constructor positional arguments:
         #         x, y, z,     pixel,       line
@@ -95,6 +97,11 @@ def geodetics_to_gcps(*geodetics: NETCDFSubDataset,
 
 
 def get_bounds(dataset: Dataset) -> tuple[int]:
+    """
+    Use the GeoTransform and the array dimensions
+    to derive the geometric bounding box of the dataset,
+    expressed in Upper-Left and Bottom-Right corner coordinates.
+    """
     transform = dataset.GetGeoTransform()
     xlen = dataset.RasterXSize
     ylen = dataset.RasterYSize
@@ -114,13 +121,14 @@ def crop_sen3_geometry(sen2: Dataset, sen3: Dataset) -> Dataset:
                           targetAlignedPixels=True,
                           xRes=500,
                           yRes=500,
-                          outputBounds=outputbounds,
-                          outputBoundsSRS=sen2.GetSpatialRef(),
+                        #   outputBounds=outputbounds,
+                        #   outputBoundsSRS=sen2.GetSpatialRef(),
                           srcSRS=sen3.GetSpatialRef(),
-                          dstSRS=sen2.GetSpatialRef(),
-                          overviewLevel=3,
-                          overwrite=True)
-    mem = "/vsimem/"
-    sen3_cropped = Warp("sen3_cropped_output.tif", sen3, options=options)
-    return sen3_cropped
+                          dstSRS=sen2.GetSpatialRef())
+    
+    sen3_reproj = Warp("sen3_cropped_output.tif", sen3, options=options)
+
+    options = TranslateOptions(outputBounds=outputbounds,
+                               outputSRS=sen2.GetSpatialRef())
+    # return Translate("sen3_cropped.tif", sen3_reproj, options=options)
 
