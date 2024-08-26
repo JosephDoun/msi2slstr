@@ -20,29 +20,38 @@ def build_unified_dataset(*datasets: Dataset) -> Dataset:
     :returns: A virtual in-memory gdal.Dataset combining the inputs.
     """
     options = BuildVRTOptions(resolution="highest", separate=True)
+    for dataset in datasets:
+        print(dataset.GetDescription(), dataset.RasterCount, dataset.RasterXSize, dataset.RasterYSize)
+        print(dataset.GetGeoTransform())
+
     return BuildVRT("/vsimem/mem_output.vrt", list(datasets), options=options)
 
 
-def load_unscaled_S3_data(*datasets: Dataset | str) -> list[Dataset]:
+def load_unscaled_S3_data(*netcdfs: NETCDFSubDataset | str) -> list[Dataset]:
     """
     Record unscaling as a preprocessing workflow
     and change to proper datatype.
     """
-    options = TranslateOptions(unscale=True,
-                               format="VRT",
-                               outputType=GDT_Float32,
-                               noData=-32768)
+    
     virtual_load = []
-    for dataset in datasets:
-        virtual_load.append(Translate("/vsimem/mem_out.vrt",
-                                      dataset,
-                                      options=options))
+    for netcdf in netcdfs:
+        print(netcdf.name)
+        options = TranslateOptions(unscale=True,
+                                   format="VRT",
+                                   outputType=GDT_Float32,
+                                   noData=-32768,
+                                   outputSRS="EPSG:4326",
+                                   GCPs=netcdf.GCPs)
+        ds = Translate("/vsimem/mem_out.vrt", netcdf.dataset, options=options)
+        
+        options = WarpOptions(dstSRS="EPSG:4326")
+        virtual_load.append(Warp("/vsimem/projected.vrt", ds, options=options))
         
     return virtual_load
 
 
-def geodetics_to_geotransform(*geodetics: NETCDFSubDataset,
-                              grid_dilation: int = 2) -> tuple[int]:
+def geodetics_to_gcps(*geodetics: NETCDFSubDataset,
+                      grid_dilation: int = 1) -> tuple[int]:
     """
     Return a geotransformation according to a collection of GCPs.
 
@@ -73,15 +82,16 @@ def geodetics_to_geotransform(*geodetics: NETCDFSubDataset,
     GCPs = []
     
     for i in range(0, X.size, grid_dilation):
-        z = float(min(9000, max(Z[i] * scaleZ, 0)))
-        x = X[i] * scaleX
-        y = Y[i] * scaleY
+        z = float(min(9000, max(Z[i] * scaleZ + offsetZ, 0)))
+        x = X[i] * scaleX + offsetX
+        y = Y[i] * scaleY + offsetY
+
         # GCP constructor positional arguments:
         #         x, y, z,     pixel,       line
         gcp = GCP(x, y, z, i % Xsize, i // Ysize)
         GCPs.append(gcp)
 
-    return GCPsToGeoTransform(GCPs)
+    return GCPs
 
 
 def get_bounds(dataset: Dataset) -> tuple[int]:
