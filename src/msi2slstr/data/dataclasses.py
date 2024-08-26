@@ -8,7 +8,7 @@ from osgeo.gdal import Open, Dataset
 from os.path import isdir, join, exists, isfile, sep, split
 from os import PathLike
 
-from .gdalutils import geodetics_to_gcps
+from .gdalutils import load_unscaled_S3_data
 
 
 class InconsistentFileType(Exception):
@@ -97,19 +97,13 @@ class NETCDFSubDataset:
         p = split(p)[0]
 
         # Load corresponding grids.
-        elevation = NETCDFGeodetic(f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":elevation_{self.__grid__}')
-        longitude = NETCDFGeodetic(f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":longitude_{self.__grid__}')
-        latitude  = NETCDFGeodetic(f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":latitude_{self.__grid__}')
+        self.elevation = NETCDFGeodetic(f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":elevation_{self.__grid__}')
+        self.longitude = NETCDFGeodetic(f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":longitude_{self.__grid__}')
+        self.latitude  = NETCDFGeodetic(f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":latitude_{self.__grid__}')
 
-        grid_resolutions = {
-            "an": 300,
-            "fn": 150,
-            "in": 150,
-        }
-
-        # Generate GCPs.
-        self.GCPs = geodetics_to_gcps(longitude, latitude, elevation,
-                                      grid_dilation=grid_resolutions[self.__grid__])
+        load_unscaled_S3_data(self.longitude,
+                              self.latitude,
+                              self.elevation)
 
     def __load__(self):
         # Assert direct invocation of NETCDF driver
@@ -121,7 +115,7 @@ class NETCDFSubDataset:
         assert self.dataset,\
             "Incorrect path to NETCDF subdataset:\n"\
             "NETCDF:\"<path-to-file>\":<subdataset-name> format expected."
-
+        
         self.name = self.path.split(":")[-1]
         self.metadata = self.dataset.GetMetadata()
         self.scale = float(self.metadata.get(f"{self.name}#scale_factor"))
