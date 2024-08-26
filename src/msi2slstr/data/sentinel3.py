@@ -1,19 +1,18 @@
 from dataclasses import dataclass, field
 from .dataclasses import NETCDFSubDataset, Archive, File, XML, join, split
 from .gdalutils import load_unscaled_S3_data
-from .gdalutils import geodetics_to_geotransform
+from .gdalutils import geodetics_to_gcps
 from .gdalutils import build_unified_dataset
 from .gdalutils import Dataset
-
-from osgeo.osr import SpatialReference, SRS_DN_WGS84
 
 
 @dataclass
 class SEN3Bands:
-    bands: tuple[Dataset] = field()
 
+    bands: tuple[Dataset]
+    
     def __post_init__(self):
-        self.bands = load_unscaled_S3_data(*(x.dataset for x in self.bands))
+        self.bands = load_unscaled_S3_data(*self.bands)
 
     def __iter__(self):
         return (b for b in self.bands)
@@ -27,7 +26,8 @@ class SEN3(Archive):
     """
     Dataclass encapsulating a `.SEN3` archive.
 
-    `geodetic` files contain georeference information:
+    `geodetic` files contain georeference information:    geotransform: tuple[float] = field(default=None)
+
         `an` grid is the most detailed addressing optical bands.
         `in` grid is half resolution addressing thermal bands.
         `fn` grid is identical to `in` apart from slight offset.
@@ -58,30 +58,28 @@ class SEN3(Archive):
 
 @dataclass
 class Sentinel3RBT(SEN3):
-    __bnames = {"S1_radiance_an", "S2_radiance_an",
+    __bnames = ("S1_radiance_an", "S2_radiance_an",
                 "S3_radiance_an", "S4_radiance_an",
                 "S5_radiance_an", "S6_radiance_an",
                 "S7_BT_in", "S8_BT_in", "S9_BT_in",
-                "F1_BT_fn", "F2_BT_in"}
+                "F1_BT_fn", "F2_BT_in")
+    
     
     dataset: Dataset = field(init=False)
 
     def __post_init__(self):
         super().__post_init__()
-        
-        # Build GeoTransform from the AN grid.
-        elevation = NETCDFSubDataset(f'NETCDF:"{join(self, "geodetic_an.nc")}":elevation_an')
-        longitude = NETCDFSubDataset(f'NETCDF:"{join(self, "geodetic_an.nc")}":longitude_an')
-        latitude  = NETCDFSubDataset(f'NETCDF:"{join(self, "geodetic_an.nc")}":latitude_an')
 
-        self.geotransform = geodetics_to_geotransform(longitude,
-                                                      latitude,
-                                                      elevation,
-                                                      grid_dilation=5)
-        
+        # Create array of booleans for filtering band files.
+        # e.g. If path contains one of the band names.
         condition = lambda x: any([x.path.endswith(f"{b}.nc") for b in self.__bnames])
-        _band_files = tuple(filter(condition, self.data_files))
-
+        
+        # Return the index of the matching band to force tuple-defined order.
+        sorting = lambda x: [self.__bnames.index(band) for band in self.__bnames if band in x.path][0]
+        
+        _band_files = list(filter(condition, self.data_files))
+        _band_files.sort(key=sorting)
+        
         assert len(_band_files) == len(self.__bnames), "Unexpected number of bands."
                 
         subdatasetname = lambda p: split(p)[-1].split(".")[-2]
@@ -90,12 +88,6 @@ class Sentinel3RBT(SEN3):
             NETCDFSubDataset(f'NETCDF:"{p}":{subdatasetname(p)}')
             for p in _band_files
         ))
-        srs = SpatialReference()
-        srs.ImportFromEPSG(4326)
-        
-        for b in self.bands:
-            b.SetSpatialRef(srs)
-            b.SetGeoTransform(self.geotransform)
 
         self.dataset = build_unified_dataset(*self.bands)
         

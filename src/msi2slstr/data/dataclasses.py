@@ -8,7 +8,7 @@ from osgeo.gdal import Open, Dataset
 from os.path import isdir, join, exists, isfile, sep, split
 from os import PathLike
 
-from .gdalutils import load_unscaled_S3_data
+from .gdalutils import geodetics_to_gcps
 
 
 class InconsistentFileType(Exception):
@@ -90,7 +90,30 @@ class NETCDFSubDataset:
     
 
     def __post_init__(self):
-        # Assert direct invocation of NETCDF driver.
+        self.__load__()
+
+        # Rebuild base path. TODO provide seperately?
+        p = self.path[len("NETCDF:\""):-len(self.name)-2]
+        p = split(p)[0]
+
+        # Load corresponding grids.
+        elevation = NETCDFGeodetic(f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":elevation_{self.__grid__}')
+        longitude = NETCDFGeodetic(f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":longitude_{self.__grid__}')
+        latitude  = NETCDFGeodetic(f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":latitude_{self.__grid__}')
+
+        grid_resolutions = {
+            "an": 300,
+            "fn": 150,
+            "in": 150,
+        }
+
+        # Generate GCPs.
+        self.GCPs = geodetics_to_gcps(longitude, latitude, elevation,
+                                      grid_dilation=grid_resolutions[self.__grid__])
+
+    def __load__(self):
+        # Assert direct invocation of NETCDF driver
+        # to extract variable.
         assert self.path.startswith("NETCDF:"),\
             "NETCDF:\"<path-to-file>\":<subdataset-name> format expected."
 
@@ -98,11 +121,18 @@ class NETCDFSubDataset:
         assert self.dataset,\
             "Incorrect path to NETCDF subdataset:\n"\
             "NETCDF:\"<path-to-file>\":<subdataset-name> format expected."
-        
+
         self.name = self.path.split(":")[-1]
         self.metadata = self.dataset.GetMetadata()
         self.scale = float(self.metadata.get(f"{self.name}#scale_factor"))
         self.offset = float(self.metadata.get(f"{self.name}#add_offset"))
-        
-        
 
+    @property
+    def __grid__(self):
+        return self.name.split("_")[-1]
+    
+
+@dataclass
+class NETCDFGeodetic(NETCDFSubDataset):
+    def __post_init__(self):
+        self.__load__()
