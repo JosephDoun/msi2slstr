@@ -1,5 +1,6 @@
 # Data related
 reference_file_formats/
+*.tif
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -135,6 +136,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+*.qgz
 
 # Spyder project settings
 .spyderproject
