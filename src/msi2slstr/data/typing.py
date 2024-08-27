@@ -8,3 +8,11 @@ class NETCDFSubDataset(Protocol):
     scale: float
     offset: float
 
+
+class Sentinel2L1C(Protocol):
+    dataset: Dataset
+
+
+class Sentinel3RBT(Protocol):
+    dataset: Dataset
+    

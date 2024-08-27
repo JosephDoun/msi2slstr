@@ -2,13 +2,16 @@ from osgeo.gdal import BuildVRT, BuildVRTOptions
 from osgeo.gdal import Translate, TranslateOptions
 from osgeo.gdal import Warp, WarpOptions
 from osgeo.gdal import Dataset, GCP
-from osgeo.gdal import GDT_Float32
-from osgeo.gdal import Open, OpenEx
-from osgeo.gdal import VSIFCloseL, VSIFOpenL, VSILFILE
-from osgeo.gdal_array import VirtualMem
+from osgeo.gdal import GDT_Float32, TermProgress
+from osgeo.gdal import Open, OpenEx, ReadDir
+from osgeo.gdal import VSIFCloseL, VSIFOpenL, VSIStatL, StatBuf
+from osgeo.gdal import VSI_STAT_EXISTS_FLAG, VSI_STAT_NATURE_FLAG
+from osgeo.gdal import VSI_STAT_SIZE_FLAG, Rmdir
+
 
 from numpy import ndarray
-from .typing import NETCDFSubDataset
+
+from .typing import NETCDFSubDataset, Sentinel2L1C, Sentinel3RBT
 
 
 def build_unified_dataset(*datasets: Dataset) -> Dataset:
@@ -22,16 +25,15 @@ def build_unified_dataset(*datasets: Dataset) -> Dataset:
 
     :returns: A virtual in-memory gdal.Dataset combining the inputs.
     """
-    options = BuildVRTOptions(resolution="highest", separate=True)
+    options = BuildVRTOptions(resolution="highest", separate=True,
+                              callback=TermProgress)
+    
+    f"/vsimem/mem_{len(datasets)}.vrt"
+    vrt: Dataset = BuildVRT("", list(datasets), options=options)
 
-    vrt = BuildVRT(f"/vsimem/mem_{len(datasets)}.vrt",
-                   list(datasets), options=options)
-        
-    for dataset in datasets:
-        print(dataset.GetDescription(), dataset.RasterCount, dataset.RasterXSize, dataset.RasterYSize)
-        print(dataset.GetGeoTransform(), dataset.GetProjectionRef())
+    for dataset in datasets: del dataset
 
-    options = TranslateOptions()
+    options = TranslateOptions(callback=TermProgress,)
     return Translate(f"built{len(datasets)}.tif", vrt, options=options)
 
 
@@ -40,18 +42,16 @@ def load_unscaled_S3_data(*netcdfs: NETCDFSubDataset | str) -> list[Dataset]:
     Record unscaling as a preprocessing workflow
     and change to proper datatype.
     """
+    options = TranslateOptions(unscale=True,
+                               format="VRT",
+                               outputType=GDT_Float32,
+                               noData=-32768,
+                               outputSRS="EPSG:4326")
     for netcdf in netcdfs:
-        
-        options = TranslateOptions(unscale=True,
-                                   format="VRT",
-                                   outputType=GDT_Float32,
-                                   noData=-32768,
-                                   outputSRS="EPSG:4326")
-        
         ds: Dataset = Translate(f"/vsimem/unscaled_{netcdf.name}.vrt",
                                 netcdf.dataset,
                                 options=options)
-                
+        
         netcdf.dataset = ds
         
         
@@ -59,11 +59,16 @@ def execute_geolocation(*netcdfs: NETCDFSubDataset):
     """
     Simply runs Warp with the geoloc switch activated.
     """
+    options = WarpOptions(geoloc=True,
+                          dstSRS="EPSG:4326",
+                          multithread=True,
+                          callback=TermProgress,
+                          format="VRT")
     for netcdf in netcdfs:
-        print("geolocating:", netcdf.name)
+        
         netcdf.dataset = Warp(f"/vsimem/geolocated_{netcdf.name}.vrt",
                               netcdf.dataset,
-                              geoloc=True)
+                              options=options)
 
 
 def geodetics_to_gcps(*geodetics: NETCDFSubDataset,
@@ -131,24 +136,18 @@ def get_bounds(dataset: Dataset) -> tuple[int]:
             transform[3] + xlen * transform[4] + ylen * transform[5])
 
 
-def crop_sen3_geometry(sen2: Dataset, sen3: Dataset) -> Dataset:
+def crop_sen3_geometry(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> Dataset:
     # crop_b_to_a = Translate("/vsimem/mem_output.tif")
     outputbounds = get_bounds(sen2)
-    print("Warping reprojected Sen3")
-    options = WarpOptions(# creationOptions=["TILED=YES",
-                          #                  "BLOCKXSIZE=16",
-                          #                  "BLOCKYSIZE=16"],
-                          targetAlignedPixels=True,
+    print("Reprojecting and cropping Sen3")
+    options = WarpOptions(targetAlignedPixels=True,
                           xRes=500,
                           yRes=500,
-                        #   outputBounds=outputbounds,
-                        #   outputBoundsSRS=sen2.GetSpatialRef(),
+                          outputBounds=outputbounds,
+                          outputBoundsSRS=sen2.GetSpatialRef(),
                           srcSRS=sen3.GetSpatialRef(),
-                          dstSRS=sen2.GetSpatialRef())
+                          dstSRS=sen2.GetSpatialRef(),
+                          callback=TermProgress)
     
-    sen3_reproj = Warp("sen3_cropped_output.tif", sen3, options=options)
-
-    options = TranslateOptions(outputBounds=outputbounds,
-                               outputSRS=sen2.GetSpatialRef())
-    # return Translate("sen3_cropped.tif", sen3_reproj, options=options)
+    sen3.dataset = Warp("sen3_cropped_output.tif", sen3, options=options)
 

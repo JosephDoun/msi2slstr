@@ -39,7 +39,6 @@ class SEN3(Archive):
     `geometry` files contain solar angles information.
     """
     
-    geotransform: tuple[int] = field(init=False)
     xfdumanifest: XML = field(init=False)
 
     def __post_init__(self):
@@ -88,10 +87,12 @@ class Sentinel3RBT(SEN3):
                 
         subdatasetname = lambda p: split(p)[-1].split(".")[-2]
         
-        self.bands = SEN3Bands(tuple(
+        bands = SEN3Bands(tuple(
             NETCDFSubDataset(f'NETCDF:"{p}":{subdatasetname(p)}')
             for p in _band_files
         ))
 
-        self.dataset = build_unified_dataset(*map(lambda x: x.dataset, self.bands))
+        self.dataset = build_unified_dataset(*map(lambda x: x.dataset, bands))
+        
+        del bands
         

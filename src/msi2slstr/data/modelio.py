@@ -11,7 +11,6 @@ class ModelInput:
     sen3rbt: Sentinel3RBT
 
     def __post_init__(self):
-        assert isinstance(self.sen2l1c, Sentinel2L1C)
-        assert isinstance(self.sen3rbt, Sentinel3RBT)
-        self.sen3rbt.dataset = crop_sen3_geometry(self.sen2l1c.dataset,
-                                                  self.sen3rbt.dataset)
+        self.sen2l1c = Sentinel2L1C(self.sen2l1c)
+        self.sen3rbt = Sentinel3RBT(self.sen3rbt)
+        crop_sen3_geometry(self.sen2l1c.dataset, self.sen3rbt.dataset)

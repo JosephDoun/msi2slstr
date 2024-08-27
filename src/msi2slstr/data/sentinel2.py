@@ -17,7 +17,6 @@ class SAFE(Archive):
     manifest: File = field(init=False)
     MTD_file: File = field(init=False)
     # datastrip: Dir = field(init=False)
-    bands: list[File] = field(init=False, default_factory=list)
     product: str = field(init=False, default="")
     tile: str = field(init=False, default="")
     acquisition_time: datetime = field(init=False, default=datetime(2000, 1, 1))
@@ -47,14 +46,15 @@ class SAFE(Archive):
 
         condition = lambda x: any([x.path.endswith(f"{b}.jp2") for b in self.__bnames])
 
-        self.bands = tuple(Image(p) for p in filter(condition, __imgdata))
-        assert len(self.bands) == len(self.__bnames), "Wrong number of bands."
+        bands = tuple(Image(p) for p in filter(condition, __imgdata))
+        assert len(bands) == len(self.__bnames), "Wrong number of bands."
+
+        self.dataset = build_unified_dataset(*map(lambda x: x.dataset, bands))
 
 
 @dataclass
 class Sentinel2L1C(SAFE):
     def __post_init__(self):
         super().__post_init__()
-        self.dataset = build_unified_dataset(*map(lambda x: x.dataset, self.bands))
 
 
