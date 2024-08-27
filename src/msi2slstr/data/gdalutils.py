@@ -3,11 +3,7 @@ from osgeo.gdal import Translate, TranslateOptions
 from osgeo.gdal import Warp, WarpOptions
 from osgeo.gdal import Dataset, GCP
 from osgeo.gdal import GDT_Float32, TermProgress
-from osgeo.gdal import Open, OpenEx, ReadDir
-from osgeo.gdal import VSIFCloseL, VSIFOpenL, VSIStatL, StatBuf
-from osgeo.gdal import VSI_STAT_EXISTS_FLAG, VSI_STAT_NATURE_FLAG
-from osgeo.gdal import VSI_STAT_SIZE_FLAG, Rmdir
-
+from osgeo.gdal import Driver, GetDriverByName
 
 from numpy import ndarray
 
@@ -25,16 +21,23 @@ def build_unified_dataset(*datasets: Dataset) -> Dataset:
 
     :returns: A virtual in-memory gdal.Dataset combining the inputs.
     """
-    options = BuildVRTOptions(resolution="highest", separate=True,
+    options = BuildVRTOptions(resolution="highest",
+                              separate=True,
                               callback=TermProgress)
     
     f"/vsimem/mem_{len(datasets)}.vrt"
     vrt: Dataset = BuildVRT("", list(datasets), options=options)
+    vrt.FlushCache()
 
-    for dataset in datasets: del dataset
+    options = TranslateOptions(callback=TermProgress)
+    
+    # This output has to have a path to be seeked by arosics,
+    # or it can be wrapped into a GeoArray in the corregistration
+    # workflow.
+    vrt = Translate(f"/vsimem/built_{len(datasets)}.vrt", vrt, options=options)
+    vrt.FlushCache()
 
-    options = TranslateOptions(callback=TermProgress,)
-    return Translate(f"built{len(datasets)}.tif", vrt, options=options)
+    return vrt
 
 
 def load_unscaled_S3_data(*netcdfs: NETCDFSubDataset | str) -> list[Dataset]:
@@ -48,6 +51,8 @@ def load_unscaled_S3_data(*netcdfs: NETCDFSubDataset | str) -> list[Dataset]:
                                noData=-32768,
                                outputSRS="EPSG:4326")
     for netcdf in netcdfs:
+        # This output has to be a VRT file in order to be
+        # infused with geolocation arrays.
         ds: Dataset = Translate(f"/vsimem/unscaled_{netcdf.name}.vrt",
                                 netcdf.dataset,
                                 options=options)
@@ -65,7 +70,6 @@ def execute_geolocation(*netcdfs: NETCDFSubDataset):
                           callback=TermProgress,
                           format="VRT")
     for netcdf in netcdfs:
-        
         netcdf.dataset = Warp(f"/vsimem/geolocated_{netcdf.name}.vrt",
                               netcdf.dataset,
                               options=options)
@@ -124,30 +128,64 @@ def get_bounds(dataset: Dataset) -> tuple[int]:
     """
     Use the GeoTransform and the array dimensions
     to derive the geometric bounding box of the dataset,
-    expressed in Upper-Left and Bottom-Right corner coordinates.
+    expressed in xmin, ymin, xmax, ymax quantities.
     """
     transform = dataset.GetGeoTransform()
     xlen = dataset.RasterXSize
     ylen = dataset.RasterYSize
-
+            # X min.
     return (transform[0],
-            transform[3],
-            transform[0] + xlen * transform[1] + ylen * transform[2],
-            transform[3] + xlen * transform[4] + ylen * transform[5])
+            # Y min.
+            transform[3] + xlen * transform[4] + ylen * transform[5], 
+            # X max.
+            transform[0] + xlen * transform[1] + ylen * transform[2],                       
+            # Y max
+            transform[3])
 
 
 def crop_sen3_geometry(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> Dataset:
-    # crop_b_to_a = Translate("/vsimem/mem_output.tif")
-    outputbounds = get_bounds(sen2)
-    print("Reprojecting and cropping Sen3")
+    outputbounds = get_bounds(sen2.dataset)
     options = WarpOptions(targetAlignedPixels=True,
                           xRes=500,
                           yRes=500,
                           outputBounds=outputbounds,
-                          outputBoundsSRS=sen2.GetSpatialRef(),
-                          srcSRS=sen3.GetSpatialRef(),
-                          dstSRS=sen2.GetSpatialRef(),
-                          callback=TermProgress)
-    
-    sen3.dataset = Warp("sen3_cropped_output.tif", sen3, options=options)
+                          srcSRS=sen3.dataset.GetSpatialRef(),
+                          dstSRS=sen2.dataset.GetSpatialRef(),
+                          callback=TermProgress,
+                          options=["-overwrite"],
+                          format="GTIFF")
+    sen3.dataset = Warp("/vsimem/cropped_S3.tif", sen3.dataset, options=options)
+    sen3.dataset.FlushCache()
 
+
+def create_dataset(xsize: int, ysize: int, nbands: int, *, driver: str,
+                   name: str = "", etype: int = GDT_Float32, proj: str = "",
+                   geotransform: tuple[int] = (),
+                   options: list[str] = []) -> Dataset:
+    driver: Driver = GetDriverByName(driver)
+    dataset: Dataset = driver.Create(name, xsize, ysize, nbands, etype, options=options)
+    dataset.SetProjection(proj)
+    dataset.SetGeoTransform(geotransform)
+    return dataset
+
+
+def create_mem_dataset(xsize: int, ysize: int, nbands: int, *,
+                       etype: int = GDT_Float32, proj: str = "",
+                       geotransform: tuple[int] = (),
+                       options: list[str] = []) -> Dataset:
+    return create_dataset(driver="MEM", name="", **locals())
+
+
+def get_vsi_size(dirname: str) -> dict:
+    from osgeo.gdal import VSIStatL, ReadDir
+    
+    files = ReadDir(dirname)
+    
+    def get_size(x):
+        __file = VSIStatL(x);
+        if __file:
+            return __file.size
+    
+    return {
+        fpath: get_size(dirname + fpath) for fpath in files 
+    }

@@ -2,6 +2,7 @@
 reference_file_formats/
 *.tif
 *.vrt
+*.aux.xml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
