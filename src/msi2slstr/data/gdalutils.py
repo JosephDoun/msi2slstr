@@ -1,6 +1,7 @@
 from osgeo.gdal import BuildVRT, BuildVRTOptions
 from osgeo.gdal import Translate, TranslateOptions
 from osgeo.gdal import Warp, WarpOptions
+from osgeo.gdal import Info, InfoOptions
 from osgeo.gdal import Dataset, GCP
 from osgeo.gdal import GDT_Float32, TermProgress
 from osgeo.gdal import Driver, GetDriverByName
@@ -10,7 +11,7 @@ from numpy import ndarray
 from .typing import NETCDFSubDataset, Sentinel2L1C, Sentinel3RBT
 
 
-def build_unified_dataset(*datasets: Dataset) -> Dataset:
+def build_unified_dataset(*datasets: Dataset) -> None:
     """
     Combine an array of datasets into a Virtual dataset.
 
@@ -25,22 +26,19 @@ def build_unified_dataset(*datasets: Dataset) -> Dataset:
                               separate=True,
                               callback=TermProgress)
     
-    f"/vsimem/mem_{len(datasets)}.vrt"
     vrt: Dataset = BuildVRT("", list(datasets), options=options)
     vrt.FlushCache()
 
     options = TranslateOptions(callback=TermProgress)
     
-    # This output has to have a path to be seeked by arosics,
-    # or it can be wrapped into a GeoArray in the corregistration
-    # workflow.
+    # This output has to have a path to be seeked and opened by arosics.
     vrt = Translate(f"/vsimem/built_{len(datasets)}.vrt", vrt, options=options)
     vrt.FlushCache()
 
     return vrt
 
 
-def load_unscaled_S3_data(*netcdfs: NETCDFSubDataset | str) -> list[Dataset]:
+def load_unscaled_S3_data(*netcdfs: NETCDFSubDataset | str) -> None:
     """
     Record unscaling as a preprocessing workflow
     and change to proper datatype.
@@ -68,7 +66,9 @@ def execute_geolocation(*netcdfs: NETCDFSubDataset):
                           dstSRS="EPSG:4326",
                           multithread=True,
                           callback=TermProgress,
-                          format="VRT")
+                          format="VRT",
+                          srcNodata=-32768,
+                          dstNodata=-32768)
     for netcdf in netcdfs:
         netcdf.dataset = Warp(f"/vsimem/geolocated_{netcdf.name}.vrt",
                               netcdf.dataset,
@@ -76,7 +76,7 @@ def execute_geolocation(*netcdfs: NETCDFSubDataset):
 
 
 def geodetics_to_gcps(*geodetics: NETCDFSubDataset,
-                      grid_dilation: int = 1) -> tuple[int]:
+                      grid_dilation: int = 1) -> list[GCP]:
     """
     Return a geotransformation according to a collection of GCPs.
 
@@ -143,7 +143,7 @@ def get_bounds(dataset: Dataset) -> tuple[int]:
             transform[3])
 
 
-def crop_sen3_geometry(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> Dataset:
+def crop_sen3_geometry(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> None:
     outputbounds = get_bounds(sen2.dataset)
     options = WarpOptions(targetAlignedPixels=True,
                           xRes=500,
@@ -152,10 +152,41 @@ def crop_sen3_geometry(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> Dataset:
                           srcSRS=sen3.dataset.GetSpatialRef(),
                           dstSRS=sen2.dataset.GetSpatialRef(),
                           callback=TermProgress,
-                          options=["-overwrite"],
-                          format="GTIFF")
+                          format="GTIFF",
+                          srcNodata=-32768,
+                          dstNodata=-32768)
     sen3.dataset = Warp("/vsimem/cropped_S3.tif", sen3.dataset, options=options)
     sen3.dataset.FlushCache()
+
+
+def trim_sen3_geometry(sen3: Sentinel3RBT) -> None:
+    """
+    Trim Sentinel-3 geometry to ensure it is contained within the
+    Sentinel-2 bounds.
+
+    Default trimming window is of dimensions 210x210 at a 4 pixel offset
+    from the upper left corner. i.e. `srcWin=(4, 4, 210, 210)`
+    """
+    options = TranslateOptions(format="VRT",
+                               # Offset can be increased to 5.
+                               # Test image dimensions are 220 x 221.
+                               srcWin=(4, 4, 210, 210),
+                               callback=TermProgress,)
+    sen3.dataset = Translate("", sen3.dataset, options=options)
+    sen3.dataset.FlushCache()
+
+
+def trim_sen2_geometry(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> None:
+    """
+    Trim Sentinel-2 image geometry to match the bounding box of Sentinel-3 scene.
+    """
+    corners = get_corners(sen3.dataset)
+    options = TranslateOptions(format="VRT",
+                               projWin=(*corners['upperLeft'],
+                                        *corners['lowerRight']),
+                               callback=TermProgress,)
+    sen2.dataset = Translate("", sen2.dataset, options=options)
+    sen2.dataset.FlushCache()
 
 
 def create_dataset(xsize: int, ysize: int, nbands: int, *, driver: str,
@@ -189,3 +220,8 @@ def get_vsi_size(dirname: str) -> dict:
     return {
         fpath: get_size(dirname + fpath) for fpath in files 
     }
+
+
+def get_corners(dataset: Dataset):
+    options = InfoOptions(format='json', deserialize=True)
+    return Info(dataset, options=options)['cornerCoordinates']

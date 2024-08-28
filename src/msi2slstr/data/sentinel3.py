@@ -96,3 +96,13 @@ class Sentinel3RBT(SEN3):
         
         del bands
         
+
+@dataclass
+class Sentinel3LST(SEN3):
+    ...
+
+
+@dataclass
+class Sentinel3Collection:
+    ...
+    
