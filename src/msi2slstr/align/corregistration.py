@@ -1,4 +1,6 @@
 from arosics import COREG_LOCAL
+from .geoarray import GeoArray
+
 from ..data.gdalutils import create_mem_dataset
 from ..data.typing import Sentinel2L1C, Sentinel3RBT
 
@@ -7,6 +9,9 @@ def corregister_datasets(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> None:
     """
     Run arosics local corregistration.
     """
+    
+    # GeoArray(sen2.dataset),
+    # GeoArray(sen3.dataset),
     CRL = COREG_LOCAL(sen2.dataset.GetDescription(),
                       sen3.dataset.GetDescription(),
                       2.,
