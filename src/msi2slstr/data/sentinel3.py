@@ -40,28 +40,52 @@ class SEN3(Archive):
     """
     
     xfdumanifest: XML = field(init=False)
+    dataset: Dataset = field(init=False)
 
     def __post_init__(self):
         """
-        Needs to build a VRT with all bands properly georeferenced.
-
-        We can probably get away with only using the `an` grid to
-        build a common geotransformation.
-
-        # TODO : Evaluate case
+        Instantiates metadata XML and collects data files.
         """
         super().__post_init__()
         self.xfdumanifest = XML(join(self, "xfdumanifest.xml"))
 
         self.data_files = [
-            # Index 2 returns the `dataObject` section.
+            # Index 2 returns the `dataObject` section where filepaths
+            # are kept.
             File(join(self, e[0][0].get("href"))) for e in self.xfdumanifest[2]
             ]
+
+        # Create array of booleans for filtering out band files.
+        # e.g. If path contains one of the band names.
+        condition = lambda x: any([x.path.endswith(f"{b}.nc") for b
+                                   in self._bnames])
+        
+        # Return the index of the matching band to force tuple-defined order.
+        # i.e. The order defined in class attribute `__bnames` will define
+        # the order of band files and therefore the order of raster channels.
+        sorting = lambda x: [self._bnames.index(band) for band
+                             in self._bnames if band in x.path][0]
+        
+        _band_files = list(filter(condition, self.data_files))
+        _band_files.sort(key=sorting)
+        
+        assert len(_band_files) == len(self._bnames),\
+            "Unexpected number of bands."
+                
+        # subdatasetname = lambda p: split(p)[-1].split(".")[-2]
+        
+        self.bands = SEN3Bands(tuple(
+            NETCDFSubDataset(f'NETCDF:"{p}":{self.subdatasetname(p)}')
+            for p in _band_files
+        ))
+        
+    def subdatasetname(self, path: File):
+        raise NotImplementedError()
 
 
 @dataclass
 class Sentinel3RBT(SEN3):
-    __bnames = ("S1_radiance_an", "S2_radiance_an",
+    _bnames = ("S1_radiance_an", "S2_radiance_an",
                 "S3_radiance_an", "S4_radiance_an",
                 "S5_radiance_an", "S6_radiance_an",
                 "S7_BT_in", "S8_BT_in", "S9_BT_in",
@@ -69,40 +93,40 @@ class Sentinel3RBT(SEN3):
     
     
     dataset: Dataset = field(init=False)
-
-    def __post_init__(self):
-        super().__post_init__()
-
-        # Create array of booleans for filtering band files.
-        # e.g. If path contains one of the band names.
-        condition = lambda x: any([x.path.endswith(f"{b}.nc") for b in self.__bnames])
-        
-        # Return the index of the matching band to force tuple-defined order.
-        sorting = lambda x: [self.__bnames.index(band) for band in self.__bnames if band in x.path][0]
-        
-        _band_files = list(filter(condition, self.data_files))
-        _band_files.sort(key=sorting)
-        
-        assert len(_band_files) == len(self.__bnames), "Unexpected number of bands."
-                
-        subdatasetname = lambda p: split(p)[-1].split(".")[-2]
-        
-        bands = SEN3Bands(tuple(
-            NETCDFSubDataset(f'NETCDF:"{p}":{subdatasetname(p)}')
-            for p in _band_files
-        ))
-
-        self.dataset = build_unified_dataset(*map(lambda x: x.dataset, bands))
-        
-        del bands
+    
+    def subdatasetname(self, path: File):
+        return split(path)[-1].split(".")[-2]
         
 
 @dataclass
 class Sentinel3LST(SEN3):
-    ...
+    _bnames = ("LST_in",)
+
+    def subdatasetname(self, path: File):
+        return "LST"
+    
+    @property
+    def __grid__(self):
+        return "in"
+
 
 
 @dataclass
-class Sentinel3Collection:
-    ...
-    
+class Sentinel3SLSTR:
+
+    sen3rbt_path: SEN3
+    sen3lst_path: SEN3
+
+    def __post_init__(self):
+        
+        RBT = Sentinel3RBT(self.sen3rbt_path)
+        LST = Sentinel3LST(self.sen3lst_path)
+
+        bands = [*RBT.bands, *LST.bands]
+        del RBT.bands, LST.bands
+
+        # This needs to move to be used once for all the expected bands
+        # of a Sentinel-3 collection.
+        self.dataset = build_unified_dataset(*map(lambda x: x.dataset, bands))
+        
+        del bands
