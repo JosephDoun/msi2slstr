@@ -22,3 +22,5 @@ class ModelInput:
         corregister_datasets(self.sen2, self.sen3)
         trim_sen3_geometry(self.sen3)
         trim_sen2_geometry(self.sen2, self.sen3)
+        
+        del self.sen3rbt, self.sen3lst

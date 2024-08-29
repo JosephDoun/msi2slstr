@@ -89,9 +89,8 @@ class NETCDFSubDatasetPath:
 
 @dataclass
 class NETCDFSubDataset:
-
     """
-    Class encapsulating NETCDF subdatasets that are normally
+    Dataclass encapsulating NETCDF subdatasets that are normally
     scaled and offset for efficiency.
     """
 
@@ -135,7 +134,11 @@ class NETCDFSubDataset:
 
     @property
     def __grid__(self):
-        return self.name.split("_")[-1]
+        """
+        Extract the correct grid name from the main filepath.
+        """
+                                        # grid.nc      # grid
+        return self.path.file_path.path.split("_")[-1].split(".")[0]
     
 
 @dataclass
