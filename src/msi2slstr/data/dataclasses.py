@@ -5,7 +5,7 @@ from datetime import datetime
 from xml.etree.ElementTree import ElementTree, Element
 from dataclasses import dataclass, field
 from osgeo.gdal import Open, Dataset
-from os.path import isdir, join, exists, isfile, sep, split
+from os.path import isdir, join, exists, isfile, sep, split, dirname
 from os import PathLike
 
 from .gdalutils import load_unscaled_S3_data
@@ -74,6 +74,20 @@ class Archive(Pathlike):
 
 
 @dataclass
+class NETCDFSubDatasetPath:
+    path: str = field()
+    file_path: File = field(init=False)
+    subdataset_name: str = field(init=False)
+
+    def __post_init__(self):
+        try:
+            driver, file_path, self.subdataset_name = self.path.split(":")
+            self.file_path = File(file_path.strip('"'))
+        except Exception as e:
+            raise Exception(f"'{self.path}' does not point to a valid NETCDF subdataset.")
+
+
+@dataclass
 class NETCDFSubDataset:
 
     """
@@ -81,7 +95,7 @@ class NETCDFSubDataset:
     scaled and offset for efficiency.
     """
 
-    path: str = field(init=True)
+    path: NETCDFSubDatasetPath = field(init=True)
     dataset: Dataset = field(init=False)
     name: str = field(init=False)
     scale: float = field(init=False, default=1., repr=False)
@@ -90,11 +104,10 @@ class NETCDFSubDataset:
     
 
     def __post_init__(self):
-        self.__load__()
+        self.__load_data__()
 
-        # Rebuild base path. TODO provide seperately?
-        p = self.path[len("NETCDF:\""):-len(self.name)-2]
-        p = split(p)[0]
+        # Get SEN3 path.
+        p = dirname(self.path.file_path)
 
         # Load corresponding grids.
         self.elevation = NETCDFGeodetic(f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":elevation_{self.__grid__}')
@@ -105,18 +118,17 @@ class NETCDFSubDataset:
                               self.latitude,
                               self.elevation)
 
-    def __load__(self):
+    def __load_data__(self):
         # Assert direct invocation of NETCDF driver
         # to extract variable.
-        assert self.path.startswith("NETCDF:"),\
-            "NETCDF:\"<path-to-file>\":<subdataset-name> format expected."
+        self.path = NETCDFSubDatasetPath(self.path)
+        self.dataset = Open(self.path.path)
 
-        self.dataset = Open(self.path)
         assert self.dataset,\
             "Incorrect path to NETCDF subdataset:\n"\
             "NETCDF:\"<path-to-file>\":<subdataset-name> format expected."
         
-        self.name = self.path.split(":")[-1]
+        self.name = self.path.subdataset_name
         self.metadata = self.dataset.GetMetadata()
         self.scale = float(self.metadata.get(f"{self.name}#scale_factor"))
         self.offset = float(self.metadata.get(f"{self.name}#add_offset"))
@@ -129,4 +141,4 @@ class NETCDFSubDataset:
 @dataclass
 class NETCDFGeodetic(NETCDFSubDataset):
     def __post_init__(self):
-        self.__load__()
+        self.__load_data__()
