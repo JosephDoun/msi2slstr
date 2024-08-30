@@ -116,6 +116,7 @@ class Sentinel3SLSTR:
 
     sen3rbt_path: SEN3
     sen3lst_path: SEN3
+    dataset: Dataset = field(init=False)
 
     def __post_init__(self):
         
@@ -128,5 +129,5 @@ class Sentinel3SLSTR:
         # This needs to move to be used once for all the expected bands
         # of a Sentinel-3 collection.
         self.dataset = build_unified_dataset(*map(lambda x: x.dataset, bands))
-        
+        self.dataset.GetTile
         del bands
