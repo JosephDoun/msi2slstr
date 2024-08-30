@@ -11,7 +11,7 @@ from numpy import ndarray
 from .typing import NETCDFSubDataset, Sentinel2L1C, Sentinel3RBT
 
 
-def build_unified_dataset(*datasets: Dataset) -> None:
+def build_unified_dataset(*datasets: Dataset) -> Dataset:
     """
     Combine an array of datasets into a Virtual dataset.
 
@@ -29,7 +29,9 @@ def build_unified_dataset(*datasets: Dataset) -> None:
     vrt: Dataset = BuildVRT("", list(datasets), options=options)
     vrt.FlushCache()
 
-    options = TranslateOptions(callback=TermProgress)
+    options = TranslateOptions(callback=TermProgress,
+                               creationOptions=["BLOCKXSIZE=500",
+                                                "BLOCKYSIZE=500"])
     
     # This output has to have a path to be seeked and opened by arosics.
     vrt = Translate(f"/vsimem/built_{len(datasets)}.vrt", vrt, options=options)
@@ -171,7 +173,9 @@ def trim_sen3_geometry(sen3: Sentinel3RBT) -> None:
                                # Offset can be increased to 5.
                                # Test image dimensions are 220 x 221.
                                srcWin=(4, 4, 210, 210),
-                               callback=TermProgress,)
+                               callback=TermProgress,
+                               creationOptions=["BLOCKXSIZE=500",
+                                                "BLOCKYSIZE=500"])
     sen3.dataset = Translate("", sen3.dataset, options=options)
     sen3.dataset.FlushCache()
 
@@ -184,7 +188,9 @@ def trim_sen2_geometry(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> None:
     options = TranslateOptions(format="VRT",
                                projWin=(*corners['upperLeft'],
                                         *corners['lowerRight']),
-                               callback=TermProgress,)
+                               callback=TermProgress,
+                               creationOptions=["BLOCKXSIZE=500",
+                                                "BLOCKYSIZE=500"])
     sen2.dataset = Translate("", sen2.dataset, options=options)
     sen2.dataset.FlushCache()
 
@@ -223,5 +229,14 @@ def get_vsi_size(dirname: str) -> dict:
 
 
 def get_corners(dataset: Dataset):
+    """
+    Return corner coordinates of image bounding box.
+
+    :param dataset: The dataset to extract corner values from.
+    :type dataset: gdal.Dataset
+
+    :return: A dictionary containing all four corners of bounding box.
+    :rtype: dict[str, float]
+    """
     options = InfoOptions(format='json', deserialize=True)
     return Info(dataset, options=options)['cornerCoordinates']

@@ -22,5 +22,24 @@ class ModelInput:
         corregister_datasets(self.sen2, self.sen3)
         trim_sen3_geometry(self.sen3)
         trim_sen2_geometry(self.sen2, self.sen3)
-        
+
         del self.sen3rbt, self.sen3lst
+
+
+@dataclass
+class Tile: ...
+
+
+def get_array_coords_tuple(t_size: int, stride: int, sizex: int, sizey: int):
+    """
+    Returns a tuple of tile coordinates given the source image dimensions,
+    tile size and array stride for sequential indexing.
+    """
+    xtiles = sizex // t_size
+    ytiles = sizey // t_size
+
+    for i in range(xtiles * ytiles):
+        x = i  % xtiles * stride
+        y = i // ytiles * stride
+    
+    return x, y, t_size, t_size
