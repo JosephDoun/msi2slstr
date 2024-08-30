@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
+from osgeo.gdal import Dataset
+
 from .dataclasses import Archive, Image, File, XML 
 from .dataclasses import InconsistentFileType, join, split
 from .gdalutils import build_unified_dataset
@@ -20,7 +22,8 @@ class SAFE(Archive):
     product: str = field(init=False, default="")
     tile: str = field(init=False, default="")
     acquisition_time: datetime = field(init=False, default=datetime(2000, 1, 1))
-    
+    dataset: Dataset = field(init=False)
+
     def __post_init__(self):
         super().__post_init__()
         SAFE_archivename = split(self.path)[-1]
