@@ -55,12 +55,14 @@ def get_array_coords_generator(t_size: int, stride: int,
     """
     Returns a tuple of tile coordinates given the source image dimensions,
     tile size and array stride for sequential indexing.
+    
+    :return: A generator of xoffset, yoffset, tile_height, tile_width values
+        in terms of array elements.
+    :rtype: Generator
     """
     xtiles = sizex // t_size
     ytiles = sizey // t_size
 
-    return (
-        (i % xtiles * stride, i // ytiles * stride, t_size, t_size)
-                    for i in range(xtiles * ytiles)
-        )
+    return ((i % xtiles * stride, i // ytiles * stride, t_size, t_size)
+                    for i in range(xtiles * ytiles))
     

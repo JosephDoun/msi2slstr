@@ -129,5 +129,4 @@ class Sentinel3SLSTR:
         # This needs to move to be used once for all the expected bands
         # of a Sentinel-3 collection.
         self.dataset = build_unified_dataset(*map(lambda x: x.dataset, bands))
-        self.dataset.GetTile
         del bands

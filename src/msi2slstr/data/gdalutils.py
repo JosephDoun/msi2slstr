@@ -5,6 +5,7 @@ from osgeo.gdal import Info, InfoOptions
 from osgeo.gdal import Dataset, GCP
 from osgeo.gdal import GDT_Float32, TermProgress
 from osgeo.gdal import Driver, GetDriverByName
+from osgeo.gdal import GetLastErrorMsg
 
 from numpy import ndarray
 
@@ -173,9 +174,7 @@ def trim_sen3_geometry(sen3: Sentinel3RBT) -> None:
                                # Offset can be increased to 5.
                                # Test image dimensions are 220 x 221.
                                srcWin=(4, 4, 210, 210),
-                               callback=TermProgress,
-                               creationOptions=["BLOCKXSIZE=500",
-                                                "BLOCKYSIZE=500"])
+                               callback=TermProgress,)
     sen3.dataset = Translate("", sen3.dataset, options=options)
     sen3.dataset.FlushCache()
 
@@ -189,8 +188,8 @@ def trim_sen2_geometry(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> None:
                                projWin=(*corners['upperLeft'],
                                         *corners['lowerRight']),
                                callback=TermProgress,
-                               creationOptions=["BLOCKXSIZE=500",
-                                                "BLOCKYSIZE=500"])
+                               creationOptions=["BLOCKXSIZE=128",
+                                                "BLOCKYSIZE=128"])
     sen2.dataset = Translate("", sen2.dataset, options=options)
     sen2.dataset.FlushCache()
 
