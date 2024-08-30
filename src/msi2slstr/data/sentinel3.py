@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
-from .dataclasses import NETCDFSubDataset, Archive, File, XML, join, split
+from .dataclasses import NETCDFSubDataset, Archive, File, XML
+from .dataclasses import join, split
 from .gdalutils import load_unscaled_S3_data
-from .gdalutils import geodetics_to_gcps, execute_geolocation
+from .gdalutils import execute_geolocation
 from .gdalutils import build_unified_dataset
 from .gdalutils import Dataset
-
-from .vrt_geolocation import set_geolocation_domain
+from .gdalutils import set_vrt_subdataset_geolocation_domain
 
 
 @dataclass
@@ -14,7 +14,7 @@ class SEN3Bands:
     bands: tuple[Dataset]
     
     def __post_init__(self):
-        set_geolocation_domain(*self.bands)
+        set_vrt_subdataset_geolocation_domain(*self.bands)
         load_unscaled_S3_data(*self.bands)
         execute_geolocation(*self.bands)
 
