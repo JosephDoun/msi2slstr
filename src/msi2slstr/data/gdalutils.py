@@ -174,7 +174,13 @@ def trim_sen3_geometry(sen3: Sentinel3RBT) -> None:
                                # Offset can be increased to 5.
                                # Test image dimensions are 220 x 221.
                                srcWin=(4, 4, 210, 210),
-                               callback=TermProgress,)
+                               callback=TermProgress,
+                               # Creation options for blocksize
+                               # manipulation won't work here
+                               # without creating a solid non-vrt memory file
+                               # at /vsimem/ i.e. using the `GTIFF` driver.
+                               # Which may not be worth the extra memory costs.
+                               )
     sen3.dataset = Translate("", sen3.dataset, options=options)
     sen3.dataset.FlushCache()
 

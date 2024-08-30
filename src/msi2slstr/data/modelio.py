@@ -31,27 +31,27 @@ class ModelInput:
 
 
 @dataclass
-class Tiles(Generator):
+class Tiles:
     """
     Generator dataclass for tiling the ModelInput datamodel.
 
-    :param d_tiles: The dimensions of the types as a tuple.
-    :type d_tiles: tuple[int, int]
+    :param d_tile: The dimensions of the tiles to be produced an int.
+    :type d_tiles: Int
 
     """
-    d_tiles: tuple[int] = field()
-    n_tiles: int = field(init=False)
+    d_tile: tuple[int] = field()
     dataset: Dataset = field()
 
     def __post_init__(self):
-        self.coords = get_array_coords_generator
+        self.coords = get_array_coords_generator(self.d_tile,
+                                                 self.dataset.RasterXSize,
+                                                 self.dataset.RasterYSize)
 
-    def send(self, __value: Any) -> Any:
-        return super().send(__value)
+    def __iter__(self):
+        return (self.dataset.ReadAsArray(*coords) for coords in self.coords)
 
 
-def get_array_coords_generator(t_size: int, stride: int,
-                               sizex: int, sizey: int) -> Generator:
+def get_array_coords_generator(t_size: int, sizex: int, sizey: int) -> Generator:
     """
     Returns a tuple of tile coordinates given the source image dimensions,
     tile size and array stride for sequential indexing.
@@ -63,6 +63,6 @@ def get_array_coords_generator(t_size: int, stride: int,
     xtiles = sizex // t_size
     ytiles = sizey // t_size
 
-    return ((i % xtiles * stride, i // ytiles * stride, t_size, t_size)
-                    for i in range(xtiles * ytiles))
+    return ((i % xtiles * t_size, i // ytiles * t_size, t_size, t_size)
+             for i in range(xtiles * ytiles))
     
