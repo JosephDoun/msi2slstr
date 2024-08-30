@@ -1,4 +1,8 @@
+from collections.abc import Generator
 from dataclasses import dataclass, field
+from osgeo.gdal import Dataset
+from typing import Any
+
 from .sentinel2 import Sentinel2L1C
 from .sentinel3 import Sentinel3SLSTR, Sentinel3RBT, Sentinel3LST
 from .gdalutils import crop_sen3_geometry
@@ -27,10 +31,27 @@ class ModelInput:
 
 
 @dataclass
-class Tile: ...
+class Tiles(Generator):
+    """
+    Generator dataclass for tiling the ModelInput datamodel.
+
+    :param d_tiles: The dimensions of the types as a tuple.
+    :type d_tiles: tuple[int, int]
+
+    """
+    d_tiles: tuple[int] = field()
+    n_tiles: int = field(init=False)
+    dataset: Dataset = field()
+
+    def __post_init__(self):
+        self.coords = get_array_coords_generator
+
+    def send(self, __value: Any) -> Any:
+        return super().send(__value)
 
 
-def get_array_coords_tuple(t_size: int, stride: int, sizex: int, sizey: int):
+def get_array_coords_generator(t_size: int, stride: int,
+                               sizex: int, sizey: int) -> Generator:
     """
     Returns a tuple of tile coordinates given the source image dimensions,
     tile size and array stride for sequential indexing.
@@ -38,8 +59,8 @@ def get_array_coords_tuple(t_size: int, stride: int, sizex: int, sizey: int):
     xtiles = sizex // t_size
     ytiles = sizey // t_size
 
-    for i in range(xtiles * ytiles):
-        x = i  % xtiles * stride
-        y = i // ytiles * stride
+    return (
+        (i % xtiles * stride, i // ytiles * stride, t_size, t_size)
+                    for i in range(xtiles * ytiles)
+        )
     
-    return x, y, t_size, t_size
