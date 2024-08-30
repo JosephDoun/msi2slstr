@@ -145,3 +145,13 @@ class NETCDFSubDataset:
 class NETCDFGeodetic(NETCDFSubDataset):
     def __post_init__(self):
         self.__load_data__()
+
+
+@dataclass
+class DataReader:
+
+    dataset: Dataset
+
+    def __getitem__(self, coords: tuple[int, int, int, int]):
+        return self.dataset.ReadAsArray(*coords)
+    
