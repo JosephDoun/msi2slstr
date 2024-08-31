@@ -5,7 +5,7 @@ from osgeo.gdal import Info, InfoOptions
 from osgeo.gdal import Dataset, GCP
 from osgeo.gdal import GDT_Float32, TermProgress
 from osgeo.gdal import Driver, GetDriverByName
-from osgeo.gdal import GetLastErrorMsg
+from osgeo.gdal import ExtendedDataType
 
 from numpy import ndarray
 
@@ -147,6 +147,7 @@ def get_bounds(dataset: Dataset) -> tuple[int]:
 
 
 def crop_sen3_geometry(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> None:
+    # Bounding box of Sentinel-2 scene as (Xmin, Ymin, Xmax, Ymax) tuple.
     outputbounds = get_bounds(sen2.dataset)
     options = WarpOptions(targetAlignedPixels=True,
                           xRes=500,
@@ -201,8 +202,8 @@ def trim_sen2_geometry(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> None:
 
 
 def create_dataset(xsize: int, ysize: int, nbands: int, *, driver: str,
-                   name: str = "", etype: int = GDT_Float32, proj: str = "",
-                   geotransform: tuple[int] = (),
+                   name: str = "", etype: ExtendedDataType = GDT_Float32,
+                   proj: str = "", geotransform: tuple[int] = (),
                    options: list[str] = []) -> Dataset:
     driver: Driver = GetDriverByName(driver)
     dataset: Dataset = driver.Create(name, xsize, ysize, nbands, etype, options=options)

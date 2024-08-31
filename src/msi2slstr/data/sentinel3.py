@@ -30,7 +30,7 @@ class SEN3(Archive):
     """
     Dataclass encapsulating a `.SEN3` archive.
 
-    `geodetic` files contain georeference information:    geotransform: tuple[float] = field(default=None)
+    `geodetic` files contain georeference information:
 
         `an` grid is the most detailed addressing optical bands.
         `in` grid is half resolution addressing thermal bands.
@@ -90,7 +90,6 @@ class Sentinel3RBT(SEN3):
                 "S5_radiance_an", "S6_radiance_an",
                 "S7_BT_in", "S8_BT_in", "S9_BT_in",
                 "F1_BT_fn", "F2_BT_in")
-    
     
     dataset: Dataset = field(init=False)
     

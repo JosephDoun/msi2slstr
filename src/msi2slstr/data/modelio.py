@@ -1,6 +1,8 @@
 from collections.abc import Generator
 from dataclasses import dataclass, field
-from osgeo.gdal import Dataset
+from osgeo.gdal import Dataset, TermProgress
+from osgeo.gdal_array import NumericTypeCodeToGDALTypeCode
+from numpy import _dtype
 from typing import Any
 
 from .sentinel2 import Sentinel2L1C
@@ -8,6 +10,7 @@ from .sentinel3 import Sentinel3SLSTR, Sentinel3RBT, Sentinel3LST
 from .gdalutils import crop_sen3_geometry
 from .gdalutils import trim_sen3_geometry
 from .gdalutils import trim_sen2_geometry
+from .gdalutils import create_dataset
 
 from ..align.corregistration import corregister_datasets
 
@@ -51,18 +54,55 @@ class Tiles:
         return (self.dataset.ReadAsArray(*coords) for coords in self.coords)
 
 
+@dataclass
+class ModelOutput:
+    """
+    Defines the output and provides a method for data writing.
+    """
+    dataset: Dataset = field(init=False)
+    geotransform: tuple[int, int, int, int, int, int] =\
+          field(init=True, default_factory=tuple)
+    projection: str = field(init=True, default=None)
+    name: str = field()
+    dtype: _dtype = field()
+    xsize: int = field()
+    ysize: int = field()
+    nbands: int = field()
+    t_size: int = field()
+
+    def __post_init__(self):
+        
+        self.dataset = create_dataset(xsize=self.xsize, ysize=self.ysize,
+                                      nbands=self.nbands,
+                                      driver="JPEG2000",
+                                      name=self.name,
+                                      etype=NumericTypeCodeToGDALTypeCode(self.dtype),
+                                      geotransform=self.geotransform,
+                                      proj=self.projection,
+                                      options=[])
+        self._coords_generator = get_array_coords_generator(t_size=self.t_size,
+                                                            sizex=self.xsize,
+                                                            sizey=self.ysize
+                                                            ).__next__
+    
+    def write(self, value):
+        coords = self._coords_generator()
+        self.dataset.WriteArray(value.swapaxes(0, -1),
+                                *coords[:2], range(self.nbands),
+                                callback=TermProgress)
+
+
 def get_array_coords_generator(t_size: int, sizex: int, sizey: int) -> Generator:
     """
     Returns a tuple of tile coordinates given the source image dimensions,
     tile size and array stride for sequential indexing.
     
-    :return: A generator of xoffset, yoffset, tile_height, tile_width values
+    :return: A generator of (xoffset, yoffset, tile_width, tile_height) values
         in terms of array elements.
     :rtype: Generator
     """
     xtiles = sizex // t_size
     ytiles = sizey // t_size
-
     return ((i % xtiles * t_size, i // ytiles * t_size, t_size, t_size)
              for i in range(xtiles * ytiles))
     
