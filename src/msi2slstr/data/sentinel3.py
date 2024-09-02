@@ -122,10 +122,9 @@ class Sentinel3SLSTR:
         RBT = Sentinel3RBT(self.sen3rbt_path)
         LST = Sentinel3LST(self.sen3lst_path)
 
+        # Collect bands for passing to uni-dataset builder.
         bands = [*RBT.bands, *LST.bands]
         del RBT.bands, LST.bands
 
-        # This needs to move to be used once for all the expected bands
-        # of a Sentinel-3 collection.
         self.dataset = build_unified_dataset(*map(lambda x: x.dataset, bands))
         del bands
