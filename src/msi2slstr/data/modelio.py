@@ -2,8 +2,8 @@ from collections.abc import Generator
 from dataclasses import dataclass, field
 from osgeo.gdal import Dataset, TermProgress
 from osgeo.gdal_array import NumericTypeCodeToGDALTypeCode
-from numpy import _dtype
-from typing import Any
+from numpy import _dtype, ndarray
+from typing import Any, Sequence
 
 from .sentinel2 import Sentinel2L1C
 from .sentinel3 import Sentinel3SLSTR, Sentinel3RBT, Sentinel3LST
@@ -31,27 +31,6 @@ class ModelInput:
         trim_sen2_geometry(self.sen2, self.sen3)
 
         del self.sen3rbt, self.sen3lst
-
-
-@dataclass
-class Tiles:
-    """
-    Generator dataclass for tiling the ModelInput datamodel.
-
-    :param d_tile: The dimensions of the tiles to be produced an int.
-    :type d_tiles: Int
-
-    """
-    d_tile: tuple[int] = field()
-    dataset: Dataset = field()
-
-    def __post_init__(self):
-        self.coords = get_array_coords_generator(self.d_tile,
-                                                 self.dataset.RasterXSize,
-                                                 self.dataset.RasterYSize)
-
-    def __iter__(self):
-        return (self.dataset.ReadAsArray(*coords) for coords in self.coords)
 
 
 @dataclass
@@ -85,10 +64,10 @@ class ModelOutput:
                                                             sizey=self.ysize
                                                             ).__next__
     
-    def write(self, value):
+    def write_tile(self, load: ndarray):
         coords = self._coords_generator()
-        self.dataset.WriteArray(value.swapaxes(0, -1),
-                                *coords[:2], range(self.nbands),
+        self.dataset.WriteArray(load.swapaxes(0, -1), *coords[:2],
+                                range(self.nbands),
                                 callback=TermProgress)
 
 
@@ -105,4 +84,46 @@ def get_array_coords_generator(t_size: int, sizex: int, sizey: int) -> Generator
     ytiles = sizey // t_size
     return ((i % xtiles * t_size, i // ytiles * t_size, t_size, t_size)
              for i in range(xtiles * ytiles))
+    
+@dataclass
+class TileGenerator:
+    """
+    Generator dataclass for tiling the ModelInput datamodel.
+
+    :param d_tile: The dimensions of the tiles to be produced an int.
+    :type d_tiles: Int
+
+    """
+    d_tile: tuple[int] = field()
+    dataset: Dataset = field()
+
+    def __post_init__(self):
+        self.coords = get_array_coords_generator(self.d_tile,
+                                                 self.dataset.RasterXSize,
+                                                 self.dataset.RasterYSize)
+
+    def __iter__(self):
+        return (self.dataset.ReadAsArray(*coords) for coords in self.coords)
+    
+    def __len__(self):
+        return self.dataset.RasterXSize * self.dataset.RasterYSize // self.d_tile // self.d_tile
+
+
+@dataclass
+class TileDispatcher:
+
+    tile_generators: tuple[TileGenerator]
+    
+    def __post_init__(self):
+        if not isinstance(self.tile_generators, Sequence):
+            self.tile_generators = (self.tile_generators,)
+            
+        assert all(
+            map(lambda x:
+                len(x) == len(self.tile_generators[0]),
+                self.tile_generators)),\
+                    "Tile generators of different lengths."
+
+    def __iter__(self):
+        return zip(self.tile_generators)
     

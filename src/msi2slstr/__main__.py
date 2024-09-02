@@ -3,6 +3,9 @@ import argparse
 from sys import argv
 from os import PathLike
 
+from .data.modelio import ModelInput, ModelOutput
+from .data.modelio import TileGenerator, TileDispatcher
+
 
 parser = argparse.ArgumentParser("msi2slstr",
                                  usage=None,
@@ -36,7 +39,13 @@ args = parser.parse_args(args=argv);
 
 def main(args):
 
-    data = ...
+    inputs = ModelInput(sen2=args.l1c, sen3rbt=args.rbt, sen3lst=args.lst)
+    generators = (TileGenerator(500, inputs.sen2), TileGenerator(10, inputs.sen3))
+    data = TileDispatcher(generators)
+    output = ModelOutput(inputs.sen2.dataset.GetGeoTransform(),
+                         inputs.sen2.dataset.GetProjection(),
+                         name=...,
+                         xsize=inputs.sen2.dataset.RasterXSize)
     model = ...
 
     return 0
