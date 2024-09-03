@@ -1,10 +1,12 @@
 import argparse
 
 from sys import argv
-from os import PathLike
+from os import PathLike, putenv
 
 from .data.modelio import ModelInput, ModelOutput
 from .data.modelio import TileGenerator, TileDispatcher
+from .metadata.naming import ProductName
+from .model import Runtime
 
 
 parser = argparse.ArgumentParser("msi2slstr",
@@ -46,7 +48,7 @@ def main(args):
                          inputs.sen2.dataset.GetProjection(),
                          name=...,
                          xsize=inputs.sen2.dataset.RasterXSize)
-    model = ...
+    model = Runtime()
 
     return 0
 
