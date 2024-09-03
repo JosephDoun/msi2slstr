@@ -58,3 +58,7 @@ class Sentinel2L1C(SAFE):
         super().__post_init__()
 
 
+@dataclass
+class Sen2Name:
+    name: str
+    

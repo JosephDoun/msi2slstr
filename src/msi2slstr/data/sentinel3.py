@@ -128,3 +128,16 @@ class Sentinel3SLSTR:
 
         self.dataset = build_unified_dataset(*map(lambda x: x.dataset, bands))
         del bands
+
+
+@dataclass
+class Sen3Name(SEN3):
+    """
+    Dataclass for parsing the naming convention of SEN3 archives into
+    separate variables. TODO
+    """
+    name: str = field(init=True)
+
+    def __post_init__(self):
+        # Remove leading path if exists.
+        self.name = split(self.name)[-1]

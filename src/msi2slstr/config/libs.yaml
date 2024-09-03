@@ -1,0 +1,23 @@
+
+
+---
+nvidia:
+  
+  posix:
+    
+    cublasLt: nvidia/cublas/lib/libcublasLt.so.11
+    cublas: nvidia/cublas/lib/libcublas.so.11
+    cudnn: nvidia/cudnn/lib/libcudnn.so.8
+    curand: nvidia/curand/lib/libcurand.so.10
+    cufft: nvidia/cufft/lib/libcufft.so.10
+    cudart: nvidia/cudart/lib/libcudart.so.11
+  
+  win32:
+    
+    cublasLt: nvidia/cublas/lib/cublasLt.dll
+    cublas: nvidia/cublas/lib/cublas.dll
+    cudnn: nvidia/cudnn/lib/cudnn.dll
+    curand: nvidia/curand/lib/curand.dll
+    cufft: nvidia/cufft/lib/cufft.dll
+    cudart: nvidia/cudart/lib/cudart.dll
+
