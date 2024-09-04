@@ -57,8 +57,8 @@ class SEN3(Archive):
 
         # Create array of booleans for filtering out band files.
         # e.g. If path contains one of the band names.
-        condition = lambda x: any([x.path.endswith(f"{b}.nc") for b
-                                   in self._bnames])
+        condition = lambda x: any([
+            x.path.endswith(f"{b}.nc") for b in self._bnames])
         
         # Return the index of the matching band to force tuple-defined order.
         # i.e. The order defined in class attribute `__bnames` will define
@@ -72,7 +72,6 @@ class SEN3(Archive):
         assert len(_band_files) == len(self._bnames),\
             "Unexpected number of bands."
                 
-        # subdatasetname = lambda p: split(p)[-1].split(".")[-2]
         
         self.bands = SEN3Bands(tuple(
             NETCDFSubDataset(f'NETCDF:"{p}":{self.subdatasetname(p)}')

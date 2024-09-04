@@ -17,11 +17,18 @@ dependencies = [
 		"gdal==3.5.3",
 		"pyproj==3.6.1",
 		"arosics",
-# 		"torch"
+		"onnxruntime==1.18.1"
 		]
 
 [project.scripts]
 msi2slstr = "msi2slstr.__main__:main"
+
+[project.optional-dependencies]
+cuda11 = [
+"nvidia-cublas-cu11==11.11.3.6",
+"nvidia-cudnn-cu11==9.3.0.75"
+]
+cuda12 = []
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -32,3 +39,4 @@ include = ["msi2slstr*"]
 
 [tool.setuptools]
 zip-safe = false
+
