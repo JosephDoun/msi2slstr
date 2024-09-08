@@ -10,6 +10,7 @@ __all__ = ["SEN2_MINMAX",
 
 site_packages_paths = [p for p in path if p.endswith("site-packages")]
 onnx_providers = ["CPUExecutionProvider"]
+onnx_provider_options = None
 
 
 
@@ -17,15 +18,16 @@ class _OpenRelativePath:
     """
     Context manager for dealing with reading package-level files.
     """
-    def __init__(self, localpath: PathLike) -> None:
+    def __init__(self, localpath: PathLike, mode: str = "rt") -> None:
         self.localpath = localpath
+        self.mode = mode
 
     def __enter__(self):
         self.root = getcwd()
         real = realpath(__file__)
         local = dirname(real)
         chdir(local)
-        self.f_handle = open(self.localpath, "rt")
+        self.f_handle = open(self.localpath, self.mode)
         return self.f_handle
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -55,8 +57,8 @@ def is_cuda_available():
 
 
 if is_cuda_available():
-    onnx_providers += ["CUDAExecutionProvider"]
-
+    # Set CUDA as priority.
+    onnx_providers.insert(0, "CUDAExecutionProvider")
 
 
 _NORMAL_MAXMIN = get_yaml_dict("./normalization.yaml")
@@ -64,6 +66,11 @@ SEN2_MINMAX = _NORMAL_MAXMIN['SEN2']
 SEN3_MINMAX = _NORMAL_MAXMIN['SEN3']
 
 
+def get_sen2name_length():
+    return len("S2B_MSIL1C_20231004T103809_N0509_R008_T31TDG_20231004T141941.SAFE")
 
+
+def get_sen3name_length():
+    return len("S3B_SL_1_RBT____20240826T102602_20240826T102902_20240826T122206_0180_097_008_2340_PS2_O_NR_004.SEN3")
 
 

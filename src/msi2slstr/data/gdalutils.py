@@ -85,6 +85,8 @@ def geodetics_to_gcps(*geodetics: NETCDFSubDataset,
 
     Use case expects X, Y, Z to be provided in separate dataset objects
     that contain the geoinformation in arrays.
+
+    DEPRECATED // TO BE REMOVED
     """
     # Will fail if number of elements differs.
     longitude, latitude, elevation = geodetics
@@ -170,6 +172,8 @@ def trim_sen3_geometry(sen3: Sentinel3RBT) -> None:
 
     Default trimming window is of dimensions 210x210 at a 4 pixel offset
     from the upper left corner. i.e. `srcWin=(4, 4, 210, 210)`
+
+    For debugging the trimming functions should write to disk directly.
     """
     options = TranslateOptions(format="VRT",
                                # Offset can be increased to 5.
@@ -189,6 +193,8 @@ def trim_sen3_geometry(sen3: Sentinel3RBT) -> None:
 def trim_sen2_geometry(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> None:
     """
     Trim Sentinel-2 image geometry to match the bounding box of Sentinel-3 scene.
+
+    For debugging the trimming functions should write to disk directly.
     """
     corners = get_corners(sen3.dataset)
     options = TranslateOptions(format="VRT",

@@ -6,7 +6,7 @@ from xml.etree.ElementTree import ElementTree, Element
 from dataclasses import dataclass, field
 from osgeo.gdal import Open, Dataset
 from os.path import isdir, join, exists, isfile, sep, split, dirname
-from os import PathLike
+from os import PathLike as _PathLike
 
 from .gdalutils import load_unscaled_S3_data
 
@@ -17,12 +17,12 @@ class InconsistentFileType(Exception):
 
 
 @dataclass
-class Pathlike(PathLike):
+class Pathlike(_PathLike):
     def __str__(self) -> str:
         return self.path
     
     def __post_init__(self):
-        self.path = str(self.path)
+        self.path = str(self.path).rstrip("/")
         assert isinstance(self.path, str)
         assert exists(self.path), f"{self} does not exist."
 
@@ -43,7 +43,7 @@ class Dir(Pathlike):
     path: str
 
     def __post_init__(self):
-        if self.path.endswith(sep): self.path = self.path[:-1]
+        super().__post_init__()
         assert isdir(self.path), f"{self} is not a directory."
 
 

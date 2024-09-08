@@ -6,6 +6,8 @@ from .dataclasses import Archive, Image, File, XML
 from .dataclasses import InconsistentFileType, join, split
 from .gdalutils import build_unified_dataset
 
+from ..config import get_sen2name_length
+
 
 @dataclass
 class SAFE(Archive):
@@ -26,10 +28,10 @@ class SAFE(Archive):
 
     def __post_init__(self):
         super().__post_init__()
-        SAFE_archivename = split(self.path)[-1]
+        SAFE_archive_name = split(self.path)[-1]
         
-        if not len(SAFE_archivename) == self.__nlength:
-            raise InconsistentFileType("File does not follow naming convention.")
+        if not len(SAFE_archive_name) == self.__nlength:
+            raise InconsistentFileType(f"{SAFE_archive_name} File does not follow naming convention.")
 
         self.manifest = XML(join(self, "manifest.safe"))
 
@@ -60,5 +62,29 @@ class Sentinel2L1C(SAFE):
 
 @dataclass
 class Sen2Name:
-    name: str
+
+    file_name: str
+    platform: str = field(init=False)
+    product: str = field(init=False)
+    acquisition_date: str = field(init=False)
+    a_orbit: str = field(init=False)
+    r_orbit: str = field(init=False)
+    tile: str = field(init=False)
+    processing_date: str = field(init=False)
+
+    def __post_init__(self):
+        self.file_name = split(self.file_name)[-1]
+        assert len(self.file_name) == get_sen2name_length(),\
+              f"{self.file_name} has unexpected length."
+
+        self.file_name, _ = self.file_name.split(".")
+        (
+            self.platform,
+            self.product,
+            self.acquisition_date,
+            self.a_orbit,
+            self.r_orbit,
+            self.tile,
+            self.processing_date
+        ) = self.file_name.split("_")
     

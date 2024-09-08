@@ -1,10 +1,13 @@
 import argparse
 
+from os import environ
 from sys import argv
-from os import PathLike, putenv
+from tqdm import tqdm
 
 from .data.modelio import ModelInput, ModelOutput
 from .data.modelio import TileGenerator, TileDispatcher
+from .data.dataclasses import Dir
+from .transform.preprocessing import DataPreprocessor
 from .metadata.naming import ProductName
 from .model import Runtime
 
@@ -30,28 +33,46 @@ the context in which it is expected to perform best.\n
 
 set_arg = parser.add_argument
 set_arg("-l1c", "--sentinel2l1c", help="Path to a Sentinel-2 L1C SAFE archive.",
-        type=PathLike, required=True, metavar="\"SEN2/L1C/PATH\"")
+        type=Dir, required=True, metavar="\"SEN2/L1C/PATH\"", dest="l1c")
 set_arg("-rbt", "--sentinel3rbt", help="Path to a Sentinel-3 RBT SEN3 archive.",
-        type=PathLike, required=True, metavar="\"SEN3/RBT/PATH\"")
+        type=Dir, required=True, metavar="\"SEN3/RBT/PATH\"", dest="rbt")
 set_arg("-lst", "--sentinel3lst", help="Path to a Sentinel-3 LST SEN3 archive.",
-        type=PathLike, required=True, metavar="\"SEN3/LST/PATH\"")
+        type=Dir, required=True, metavar="\"SEN3/LST/PATH\"", dest="lst",)
 
 
-args = parser.parse_args(args=argv);
 
-def main(args):
+environ["MODE"] = "INFER"
+
+
+args = parser.parse_args(args=argv[1:]);
+
+def main(args=args):
 
     inputs = ModelInput(sen2=args.l1c, sen3rbt=args.rbt, sen3lst=args.lst)
-    generators = (TileGenerator(500, inputs.sen2), TileGenerator(10, inputs.sen3))
+    generators = (TileGenerator(500, inputs.sen2.dataset),
+                  TileGenerator(10, inputs.sen3.dataset))
     data = TileDispatcher(generators)
     output = ModelOutput(inputs.sen2.dataset.GetGeoTransform(),
                          inputs.sen2.dataset.GetProjection(),
-                         name=...,
-                         xsize=inputs.sen2.dataset.RasterXSize)
+                         name=ProductName(args.l1c, args.rbt),
+                         xsize=inputs.sen2.dataset.RasterXSize,
+                         ysize=inputs.sen2.dataset.RasterYSize,
+                         nbands=inputs.sen3.dataset.RasterCount,
+                         t_size=500)
     model = Runtime()
+    preprocess = DataPreprocessor()
+    for sen2tile, sen3tile in tqdm(data, desc="Fusing data..."):
+        sen2tile, sen3tile = preprocess(sen2tile, sen3tile)
+        Y_hat = model(sen2tile, sen3tile)[0]
+        Y_hat = preprocess.reset_value_range(Y_hat)
+        output.write_tiles(Y_hat)
+    
+    output.write_metadata([
+        ...
+    ])
 
     return 0
 
 
 if __name__ == "__main__":
-    main(args);
+    main();

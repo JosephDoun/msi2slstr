@@ -10,7 +10,7 @@ linux:
     cudnn: nvidia/cudnn/lib/libcudnn.so.8
     curand: nvidia/curand/lib/libcurand.so.10
     cufft: nvidia/cufft/lib/libcufft.so.10
-    cudart: nvidia/cudart/lib/libcudart.so.11
+    # cudart: nvidia/cudart/lib/libcudart.so.11.0
   
 win32:
   
@@ -21,5 +21,5 @@ win32:
     cudnn: nvidia/cudnn/lib/cudnn.dll
     curand: nvidia/curand/lib/curand.dll
     cufft: nvidia/cufft/lib/cufft.dll
-    cudart: nvidia/cudart/lib/cudart.dll
+    # cudart: nvidia/cudart/lib/cudart.dll
 

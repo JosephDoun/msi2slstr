@@ -8,6 +8,10 @@ from .gdalutils import Dataset
 from .gdalutils import set_vrt_subdataset_geolocation_domain
 
 
+from ..config import get_sen3name_length
+
+
+
 @dataclass
 class SEN3Bands:
 
@@ -108,7 +112,6 @@ class Sentinel3LST(SEN3):
         return "in"
 
 
-
 @dataclass
 class Sentinel3SLSTR:
 
@@ -130,13 +133,50 @@ class Sentinel3SLSTR:
 
 
 @dataclass
-class Sen3Name(SEN3):
+class Sen3Name:
     """
-    Dataclass for parsing the naming convention of SEN3 archives into
-    separate variables. TODO
+    Dataclass for parsing strings according to the naming convention of SEN3
+    archives into variables.
     """
-    name: str = field(init=True)
+
+    file_name: str = field(init=True)
+    platform: str = field(init=False)
+    sensor: str = field(init=False)
+    processing_level: str = field(init=False)
+    product: str = field(init=False)
+    time: str = field(init=False)
+    acquisition_start: str = field(init=False)
+    acquisition_end: str = field(init=False)
+    processing_time: str = field(init=False)
+
+    # TODO rest of info according to naming convention manual.
 
     def __post_init__(self):
         # Remove leading path if exists.
-        self.name = split(self.name)[-1]
+        self.file_name = split(self.file_name)[-1]
+        assert len(self.file_name) == get_sen3name_length(),\
+              f"{self.file_name} has unexpected length."
+        
+        self.file_name, sen3 = self.file_name.split(".")
+        (
+            self.platform,
+            self.sensor,
+            self.processing_level,
+            self.product,
+            _,
+            _,
+            _,
+            self.acquisition_start,
+            self.acquisition_end,
+            self.processing_time,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _
+        ) = self.file_name.split("_")
+
+        _, self.time = self.acquisition_start.split("T")
