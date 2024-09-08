@@ -16,3 +16,6 @@ class Sentinel2L1C(Protocol):
 class Sentinel3RBT(Protocol):
     dataset: Dataset
     
+
+class Sentinel3SLSTR(Protocol):
+    dataset: Dataset

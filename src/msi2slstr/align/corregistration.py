@@ -1,10 +1,10 @@
 from arosics import COREG_LOCAL
 
 from ..data.gdalutils import create_mem_dataset, TermProgress
-from ..data.typing import Sentinel2L1C, Sentinel3RBT
+from ..data.typing import Sentinel2L1C, Sentinel3SLSTR
 
 
-def corregister_datasets(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> None:
+def corregister_datasets(sen2: Sentinel2L1C, sen3: Sentinel3SLSTR) -> None:
     """
     Run arosics local corregistration.
     """
@@ -17,7 +17,9 @@ def corregister_datasets(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> None:
                       nodata=(0, -32768),
                       r_b4match=9,
                       s_b4match=3,
-                      min_reliability=10)
+                      min_reliability=10,
+                      resamp_alg_calc=0,
+                      resamp_alg_deshift=0)
     CRL.correct_shifts(cliptoextent=True)
     proj = CRL.deshift_results.get("updated projection")
     geot = CRL.deshift_results.get("updated geotransform")
@@ -26,7 +28,9 @@ def corregister_datasets(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> None:
     dataset = create_mem_dataset(*data.shape,
                                  proj=proj,
                                  geotransform=geot)
-    dataset.WriteArray(data.swapaxes(-1, 0),
+    
+    # Expected shape C, H, W // From H, W, C // Swap W<->C, W<->H.
+    dataset.WriteArray(data.swapaxes(-1, 0).swapaxes(-1, -2),
                        band_list=range(1, 1 + data.shape[-1]),
                        callback=TermProgress)
     del data, proj, geot

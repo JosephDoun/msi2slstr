@@ -2,7 +2,7 @@ from collections.abc import Generator
 from dataclasses import dataclass, field
 from osgeo.gdal import Dataset, TermProgress
 from osgeo.gdal_array import NumericTypeCodeToGDALTypeCode
-from numpy import _dtype, ndarray
+from numpy import dtype, ndarray, float32, int16, int32
 from typing import Any, Sequence
 
 from .sentinel2 import Sentinel2L1C
@@ -13,6 +13,8 @@ from .gdalutils import trim_sen2_geometry
 from .gdalutils import create_dataset
 
 from ..align.corregistration import corregister_datasets
+from ..metadata.abc import Metadata
+
 
 
 @dataclass
@@ -40,22 +42,22 @@ class ModelOutput:
     """
     dataset: Dataset = field(init=False)
     geotransform: tuple[int, int, int, int, int, int] =\
-          field(init=True, default_factory=tuple)
-    projection: str = field(init=True, default=None)
+          field(init=True)
+    projection: str = field(init=True)
     name: str = field()
-    dtype: _dtype = field()
     xsize: int = field()
     ysize: int = field()
     nbands: int = field()
     t_size: int = field()
+    d_type: dtype = field(default=float32)
 
     def __post_init__(self):
-        
+        assert len(self.geotransform) == 6
         self.dataset = create_dataset(xsize=self.xsize, ysize=self.ysize,
                                       nbands=self.nbands,
-                                      driver="JPEG2000",
+                                      driver="GTiff",
                                       name=self.name,
-                                      etype=NumericTypeCodeToGDALTypeCode(self.dtype),
+                                      etype=NumericTypeCodeToGDALTypeCode(self.d_type),
                                       geotransform=self.geotransform,
                                       proj=self.projection,
                                       options=[])
@@ -64,11 +66,21 @@ class ModelOutput:
                                                             sizey=self.ysize
                                                             ).__next__
     
-    def write_tile(self, load: ndarray):
-        coords = self._coords_generator()
-        self.dataset.WriteArray(load.swapaxes(0, -1), *coords[:2],
-                                range(self.nbands),
-                                callback=TermProgress)
+    def write_tiles(self, load: ndarray):
+        """
+        Tile-writing method for 4D arrays containing N*3D tiles to be written
+        to dataset.
+
+        :param load: 4D array of 3D tiles.
+        :param load: `numpy.ndarray`
+        """
+        for tile in load:
+            coords = self._coords_generator()
+            self.dataset.WriteArray(tile, *coords[:2],
+                                    range(1, self.nbands + 1),)
+        
+    def write_metadata(self, m_list: list[Metadata]):
+        ...
 
 
 def get_array_coords_generator(t_size: int, sizex: int, sizey: int) -> Generator:
@@ -84,7 +96,13 @@ def get_array_coords_generator(t_size: int, sizex: int, sizey: int) -> Generator
     ytiles = sizey // t_size
     return ((i % xtiles * t_size, i // ytiles * t_size, t_size, t_size)
              for i in range(xtiles * ytiles))
-    
+
+
+def read_tiles(dataset, coords_packet):
+    """Read a batch of tiles sequencially."""
+    return tuple((dataset.ReadAsArray(*coords) for coords in coords_packet))
+
+
 @dataclass
 class TileGenerator:
     """
@@ -96,6 +114,7 @@ class TileGenerator:
     """
     d_tile: tuple[int] = field()
     dataset: Dataset = field()
+    batch_size: int = field(default=1)
 
     def __post_init__(self):
         self.coords = get_array_coords_generator(self.d_tile,
@@ -113,17 +132,19 @@ class TileGenerator:
 class TileDispatcher:
 
     tile_generators: tuple[TileGenerator]
+    batch_size: int = field(default=1)
     
     def __post_init__(self):
         if not isinstance(self.tile_generators, Sequence):
             self.tile_generators = (self.tile_generators,)
             
         assert all(
-            map(lambda x:
-                len(x) == len(self.tile_generators[0]),
-                self.tile_generators)),\
-                    "Tile generators of different lengths."
+            map(lambda x: len(x) == len(self), self.tile_generators)
+            ), "Tile generators of different lengths."
 
     def __iter__(self):
-        return zip(self.tile_generators)
+        return zip(*self.tile_generators, strict=True)
+    
+    def __len__(self):
+        return len(self.tile_generators[0])
     
