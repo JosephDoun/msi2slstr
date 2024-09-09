@@ -29,7 +29,7 @@ def corregister_datasets(sen2: Sentinel2L1C, sen3: Sentinel3SLSTR) -> None:
                                  proj=proj,
                                  geotransform=geot)
     
-    # Expected shape C, H, W // From H, W, C // Swap W<->C, W<->H.
+    # From H, W, C -> Swap W<->C -> Swap W<->H -> Expected shape C, H, W.
     dataset.WriteArray(data.swapaxes(-1, 0).swapaxes(-1, -2),
                        band_list=range(1, 1 + data.shape[-1]),
                        callback=TermProgress)

@@ -18,14 +18,18 @@ class DataPreprocessor:
         self.sen2norm = Normalizer(*zip(*SEN2_MINMAX.values()))
         self.sen3norm = Normalizer(*zip(*SEN3_MINMAX.values()))
 
-    def __call__(self, sen2list: list[ndarray], sen3list: list[ndarray]) -> tuple[ndarray, ndarray]:
-        sen2 = stack([sen2list], 0)
-        sen3 = stack([sen3list], 0)
-        assert sen2.ndim == 4
+    def __call__(self, sen2tuple: tuple[ndarray],
+                 sen3tuple: tuple[ndarray]) -> tuple[ndarray, ndarray]:
+        # Build batch dimension.
+        sen2 = stack(sen2tuple, 0)
+        sen3 = stack(sen3tuple, 0)
+        # Verify 0 min.
         sen2.clip(0, None, sen2)
         sen3.clip(0, None, sen3)
+        # Normalize.
         sen2 = self.sen2norm(sen2)
         sen3 = self.sen3norm(sen3)
+        # Cast to float32 and return.
         return sen2.astype(float32, copy=False), sen3.astype(float32, copy=False)
     
     def reset_value_range(self, Y_hat: ndarray):

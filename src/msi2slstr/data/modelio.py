@@ -98,11 +98,6 @@ def get_array_coords_generator(t_size: int, sizex: int, sizey: int) -> Generator
              for i in range(xtiles * ytiles))
 
 
-def read_tiles(dataset, coords_packet):
-    """Read a batch of tiles sequencially."""
-    return tuple((dataset.ReadAsArray(*coords) for coords in coords_packet))
-
-
 @dataclass
 class TileGenerator:
     """
@@ -120,12 +115,19 @@ class TileGenerator:
         self.coords = get_array_coords_generator(self.d_tile,
                                                  self.dataset.RasterXSize,
                                                  self.dataset.RasterYSize)
+        self.__batches__ = range(0, len(self), self.batch_size)
 
     def __iter__(self):
-        return (self.dataset.ReadAsArray(*coords) for coords in self.coords)
+        return (self.__get_batch__() for _ in self.__batches__)
+    
+    def __get_batch__(self):
+        # Extract an array-tuple of size `batch_size` at a time.
+        return tuple(self.dataset.ReadAsArray(*coords) for _, coords
+                     in zip(range(self.batch_size), self.coords))
     
     def __len__(self):
-        return self.dataset.RasterXSize * self.dataset.RasterYSize // self.d_tile // self.d_tile
+        return self.dataset.RasterXSize * self.dataset.RasterYSize\
+              // self.d_tile // self.d_tile
 
 
 @dataclass
@@ -139,12 +141,14 @@ class TileDispatcher:
             self.tile_generators = (self.tile_generators,)
             
         assert all(
-            map(lambda x: len(x) == len(self), self.tile_generators)
+            map(lambda x: -(-len(x) // x.batch_size) == len(self),
+                self.tile_generators)
             ), "Tile generators of different lengths."
 
     def __iter__(self):
         return zip(*self.tile_generators, strict=True)
     
     def __len__(self):
-        return len(self.tile_generators[0])
+        return - ( - len(self.tile_generators[0]) //
+                  self.tile_generators[0].batch_size )
     

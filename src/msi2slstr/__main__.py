@@ -49,8 +49,8 @@ args = parser.parse_args(args=argv[1:]);
 def main(args=args):
 
     inputs = ModelInput(sen2=args.l1c, sen3rbt=args.rbt, sen3lst=args.lst)
-    generators = (TileGenerator(500, inputs.sen2.dataset),
-                  TileGenerator(10, inputs.sen3.dataset))
+    generators = (TileGenerator(500, inputs.sen2.dataset, batch_size=1),
+                  TileGenerator(10, inputs.sen3.dataset, batch_size=1))
     data = TileDispatcher(generators)
     output = ModelOutput(inputs.sen2.dataset.GetGeoTransform(),
                          inputs.sen2.dataset.GetProjection(),
