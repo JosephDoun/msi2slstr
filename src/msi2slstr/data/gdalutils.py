@@ -275,3 +275,10 @@ def set_vrt_subdataset_geolocation_domain(*netcdfs: NETCDFSubDataset):
              "LINE_OFFSET": 0,
              "LINE_STEP": 1}, "GEOLOCATION")
         
+
+from osgeo_utils.gdal_calc import Calc
+
+
+def apply_calculation(dataset: Dataset, calculation: str) -> Dataset:
+    dataset = Calc(calc=calculation, outfile="")
+    return dataset
