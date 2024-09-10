@@ -1,2 +1,2 @@
 # msi2slstr
-Python package repository of the inference environment for the Sen2LSTR fusion model, tasked to fuse MSI and SLSTR sensor data.
+AI assisted data fusion software for Sentinel-2 L1C and Sentinel-3 SLSTR Level 1 and 2 products 
