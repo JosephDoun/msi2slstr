@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "msi2slstr"
+authors = [
+	{name="Joseph Doundoulakis", email="iosif.doundoulakis@outlook.com"}
+	]
+version = "0.0.0"
+description = "TODO"
+requires-python = ">=3.8"
+keywords = ["TODO"]
+classifiers = ["TODO"]
+license = {text = "MIT"}
+dependencies = [
+		"gdal==3.5.3",
+		"pyproj==3.6.1",
+		"arosics",
+		"onnxruntime==1.18.1"
+		]
+
+[project.scripts]
+msi2slstr = "msi2slstr.__main__:main"
+
+[project.optional-dependencies]
+cuda11 = [
+"nvidia-cublas-cu11==11.6.5.2",
+"nvidia-cudnn-cu11==8.2.4",
+"nvidia-curand-cu11==9.3.0.75",
+"nvidia-cufft-cu11==9.3.0.75",
+]
+cuda12 = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["msi2slstr*"]
+
+# [tool.setuptools.package-data]
+# msi2slstr = ["bin/*", "lib/*"]
+
+[tool.setuptools]
+zip-safe = false
+

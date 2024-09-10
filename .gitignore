@@ -1,10 +1,19 @@
+# Data related
+reference_file_formats/
+*.tif
+*.vrt
+*.aux.xml
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
 # C extensions
+gdal/
+pyproj/
 *.so
+*.so.*
 
 # Distribution / packaging
 .Python
@@ -129,10 +138,14 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+*.qgz
 
 # Spyder project settings
 .spyderproject
 .spyproject
+
+# vscode project settings
+.vscode
 
 # Rope project settings
 .ropeproject
