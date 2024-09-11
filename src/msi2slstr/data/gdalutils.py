@@ -26,14 +26,14 @@ def build_unified_dataset(*datasets: Dataset) -> Dataset:
     options = BuildVRTOptions(resolution="highest",
                               separate=True,
                               callback=TermProgress)
-    
+
     vrt: Dataset = BuildVRT("", list(datasets), options=options)
     vrt.FlushCache()
 
     options = TranslateOptions(callback=TermProgress,
                                creationOptions=["BLOCKXSIZE=500",
                                                 "BLOCKYSIZE=500"])
-    
+
     # This output has to have a path to be seeked and opened by arosics.
     vrt = Translate(f"/vsimem/built_{len(datasets)}.vrt", vrt, options=options)
     vrt.FlushCache()
@@ -57,10 +57,10 @@ def load_unscaled_S3_data(*netcdfs: NETCDFSubDataset | str) -> None:
         ds: Dataset = Translate(f"/vsimem/unscaled_{netcdf.name}.vrt",
                                 netcdf.dataset,
                                 options=options)
-        
+
         netcdf.dataset = ds
-        
-        
+
+
 def execute_geolocation(*netcdfs: NETCDFSubDataset):
     """
     Simply runs Warp with the geoloc switch activated.
@@ -90,7 +90,7 @@ def geodetics_to_gcps(*geodetics: NETCDFSubDataset,
     """
     # Will fail if number of elements differs.
     longitude, latitude, elevation = geodetics
-    
+
     # Scale of data.
     scaleX = longitude.scale
     scaleY = latitude.scale
@@ -110,16 +110,19 @@ def geodetics_to_gcps(*geodetics: NETCDFSubDataset,
     Z: ndarray = elevation.dataset.ReadAsArray().flatten()
 
     GCPs = []
-    
+
     for i in range(0, X.size, grid_dilation):
 
         z = Z[i] * scaleZ + offsetZ
         x = X[i] * scaleX + offsetX
         y = Y[i] * scaleY + offsetY
 
-        if 0 > z > 9000: continue
-        if -90 > x > 90: continue
-        if -180 > y > 180: continue
+        if 0 > z > 9000:
+            continue
+        if -90 > x > 90:
+            continue
+        if -180 > y > 180:
+            continue
 
         # GCP constructor positional arguments:
         #         x, y, z,     pixel,       line
@@ -138,12 +141,12 @@ def get_bounds(dataset: Dataset) -> tuple[int]:
     transform = dataset.GetGeoTransform()
     xlen = dataset.RasterXSize
     ylen = dataset.RasterYSize
-            # X min.
+    # X min.
     return (transform[0],
             # Y min.
-            transform[3] + xlen * transform[4] + ylen * transform[5], 
+            transform[3] + xlen * transform[4] + ylen * transform[5],
             # X max.
-            transform[0] + xlen * transform[1] + ylen * transform[2],                       
+            transform[0] + xlen * transform[1] + ylen * transform[2],
             # Y max
             transform[3])
 
@@ -161,7 +164,8 @@ def crop_sen3_geometry(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> None:
                           format="GTIFF",
                           srcNodata=-32768,
                           dstNodata=-32768)
-    sen3.dataset = Warp("/vsimem/cropped_S3.tif", sen3.dataset, options=options)
+    sen3.dataset = Warp("/vsimem/cropped_S3.tif",
+                        sen3.dataset, options=options)
     sen3.dataset.FlushCache()
 
 
@@ -212,7 +216,8 @@ def create_dataset(xsize: int, ysize: int, nbands: int, *, driver: str,
                    proj: str = "", geotransform: tuple[int] = (),
                    options: list[str] = []) -> Dataset:
     driver: Driver = GetDriverByName(driver)
-    dataset: Dataset = driver.Create(name, xsize, ysize, nbands, etype, options=options)
+    dataset: Dataset = driver.Create(
+        name, xsize, ysize, nbands, etype, options=options)
     dataset.SetProjection(proj)
     dataset.SetGeoTransform(geotransform)
     return dataset
@@ -227,16 +232,16 @@ def create_mem_dataset(xsize: int, ysize: int, nbands: int, *,
 
 def get_vsi_size(dirname: str) -> dict:
     from osgeo.gdal import VSIStatL, ReadDir
-    
+
     files = ReadDir(dirname)
-    
+
     def get_size(x):
-        __file = VSIStatL(x);
+        __file = VSIStatL(x)
         if __file:
             return __file.size
-    
+
     return {
-        fpath: get_size(dirname + fpath) for fpath in files 
+        fpath: get_size(dirname + fpath) for fpath in files
     }
 
 
@@ -274,7 +279,7 @@ def set_vrt_subdataset_geolocation_domain(*netcdfs: NETCDFSubDataset):
              "PIXEL_STEP": 1,
              "LINE_OFFSET": 0,
              "LINE_STEP": 1}, "GEOLOCATION")
-        
+
 
 from osgeo_utils.gdal_calc import Calc
 

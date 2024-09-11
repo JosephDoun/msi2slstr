@@ -16,7 +16,6 @@ from ..align.corregistration import corregister_datasets
 from ..metadata.abc import Metadata
 
 
-
 @dataclass
 class ModelInput:
     sen2: Sentinel2L1C = field()
@@ -42,7 +41,7 @@ class ModelOutput:
     """
     dataset: Dataset = field(init=False)
     geotransform: tuple[int, int, int, int, int, int] =\
-          field(init=True)
+        field(init=True)
     projection: str = field(init=True)
     name: str = field()
     xsize: int = field()
@@ -57,7 +56,8 @@ class ModelOutput:
                                       nbands=self.nbands,
                                       driver="GTiff",
                                       name=self.name,
-                                      etype=NumericTypeCodeToGDALTypeCode(self.d_type),
+                                      etype=NumericTypeCodeToGDALTypeCode(
+                                          self.d_type),
                                       geotransform=self.geotransform,
                                       proj=self.projection,
                                       options=[])
@@ -65,7 +65,7 @@ class ModelOutput:
                                                             sizex=self.xsize,
                                                             sizey=self.ysize
                                                             ).__next__
-    
+
     def write_tiles(self, load: ndarray):
         """
         Tile-writing method for 4D arrays containing N*3D tiles to be written
@@ -78,7 +78,7 @@ class ModelOutput:
             coords = self._coords_generator()
             self.dataset.WriteArray(tile, *coords[:2],
                                     range(1, self.nbands + 1),)
-        
+
     def write_metadata(self, m_list: list[Metadata]):
         ...
 
@@ -87,7 +87,7 @@ def get_array_coords_generator(t_size: int, sizex: int, sizey: int) -> Generator
     """
     Returns a tuple of tile coordinates given the source image dimensions,
     tile size and array stride for sequential indexing.
-    
+
     :return: A generator of (xoffset, yoffset, tile_width, tile_height) values
         in terms of array elements.
     :rtype: Generator
@@ -95,7 +95,7 @@ def get_array_coords_generator(t_size: int, sizex: int, sizey: int) -> Generator
     xtiles = sizex // t_size
     ytiles = sizey // t_size
     return ((i % xtiles * t_size, i // ytiles * t_size, t_size, t_size)
-             for i in range(xtiles * ytiles))
+            for i in range(xtiles * ytiles))
 
 
 @dataclass
@@ -119,15 +119,15 @@ class TileGenerator:
 
     def __iter__(self):
         return (self.__get_batch__() for _ in self.__batches__)
-    
+
     def __get_batch__(self):
         # Extract an array-tuple of size `batch_size` at a time.
         return tuple(self.dataset.ReadAsArray(*coords) for _, coords
                      in zip(range(self.batch_size), self.coords))
-    
+
     def __len__(self):
         return self.dataset.RasterXSize * self.dataset.RasterYSize\
-              // self.d_tile // self.d_tile
+            // self.d_tile // self.d_tile
 
 
 @dataclass
@@ -135,20 +135,19 @@ class TileDispatcher:
 
     tile_generators: tuple[TileGenerator]
     batch_size: int = field(default=1)
-    
+
     def __post_init__(self):
         if not isinstance(self.tile_generators, Sequence):
             self.tile_generators = (self.tile_generators,)
-            
+
         assert all(
             map(lambda x: -(-len(x) // x.batch_size) == len(self),
                 self.tile_generators)
-            ), "Tile generators of different lengths."
+        ), "Tile generators of different lengths."
 
     def __iter__(self):
         return zip(*self.tile_generators, strict=True)
-    
+
     def __len__(self):
-        return - ( - len(self.tile_generators[0]) //
-                  self.tile_generators[0].batch_size )
-    
+        return - (- len(self.tile_generators[0]) //
+                  self.tile_generators[0].batch_size)

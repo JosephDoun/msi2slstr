@@ -1,3 +1,8 @@
+"""
+Definining preprocessor classes that encapsulate complete data preparation
+workflows.
+"""
+
 from typing import Any
 from .normalization import Normalizer, ndarray
 
@@ -14,6 +19,7 @@ class DataPreprocessor:
 
     e.g. Nodata values handling, readjusting value ranges, etc. 
     """
+
     def __init__(self) -> None:
         self.sen2norm = Normalizer(*zip(*SEN2_MINMAX.values()))
         self.sen3norm = Normalizer(*zip(*SEN3_MINMAX.values()))
@@ -31,7 +37,6 @@ class DataPreprocessor:
         sen3 = self.sen3norm(sen3)
         # Cast to float32 and return.
         return sen2.astype(float32, copy=False), sen3.astype(float32, copy=False)
-    
+
     def reset_value_range(self, Y_hat: ndarray):
         return self.sen3norm.reverse(Y_hat)
-    

@@ -1,7 +1,6 @@
 from arosics.geometry import GeoArray
 from numpy import ndarray
-from osgeo.gdal import Dataset, Band
-from py_tools_ds.geo.projection import isLocal, CRS
+from osgeo.gdal import Dataset
 
 
 def build_geoarray_from_dataset(dataset: Dataset) -> "GeoArray":
@@ -14,15 +13,16 @@ class GeoArray(GeoArray):
 
     DEPRECATED
 
-    NOTE not worth it. Reading the Sentinel-2 image with `.ReadAsArray()`
+    NOTE inefficient. Reading the Sentinel-2 image with :code:`dataset.ReadAsArray()`
     is blocking and doubles memory usage during corregistration.
     """
+
     def __init__(self, path_or_array: str | ndarray | GeoArray | Dataset,
                  geotransform: tuple = None, projection: str = None,
                  bandnames: list = None, nodata: float = None,
                  basename: str = '', progress: bool = True,
                  q: bool = False) -> None:
-        
+
         if isinstance(path_or_array, Dataset):
             geotransform = path_or_array.GetGeoTransform()
             projection = path_or_array.GetProjection()
@@ -32,4 +32,3 @@ class GeoArray(GeoArray):
 
         super().__init__(path_or_array, geotransform, projection,
                          bandnames, nodata, basename, progress, q)
-        

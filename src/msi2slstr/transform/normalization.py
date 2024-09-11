@@ -1,6 +1,9 @@
+"""
+Data normalization module.
+"""
+
 from numpy import ndarray
 from numpy import array as _array
-
 
 
 class Normalizer:
@@ -17,6 +20,7 @@ class Normalizer:
         value range. Has to be broadcastable to the array's shape.
     :type scale: tuple[int]
     """
+
     def __init__(self, offset: tuple[float], scale: tuple[float]) -> None:
         self.offset = _array(offset).reshape(1, len(offset), 1, 1)
         self.scale = _array(scale).reshape(1, len(scale), 1, 1)
@@ -24,7 +28,6 @@ class Normalizer:
 
     def __call__(self, array: ndarray) -> ndarray:
         return (array - self.offset) / (self.scale - self.offset + self.e)
-    
+
     def reverse(self, array: ndarray) -> ndarray:
         return array * (self.scale - self.offset + self.e) + self.offset
-    
