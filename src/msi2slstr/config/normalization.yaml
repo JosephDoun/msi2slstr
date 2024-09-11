@@ -2,13 +2,13 @@
 # Template
 # Product-type:
 #   Band:
-#     - "Min value"
-#     - "Max value"
+#     - "Offset value"
+#     - "Scale value"
 ---
 SEN2:
   B01:
-    - 0    # Min
-    - 1500 # Max
+    - 0    # Offset
+    - 1500 # Scale
   B02:
     - 0
     - 1500
