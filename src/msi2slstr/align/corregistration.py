@@ -24,16 +24,16 @@ def corregister_datasets(sen2: Sentinel2L1C, sen3: Sentinel3SLSTR) -> None:
     proj = CRL.deshift_results.get("updated projection")
     geot = CRL.deshift_results.get("updated geotransform")
     data = CRL.deshift_results.get("arr_shifted")
-    
+
     dataset = create_mem_dataset(*data.shape,
                                  proj=proj,
                                  geotransform=geot)
-    
+
     # From H, W, C -> Swap W<->C -> Swap W<->H -> Expected shape C, H, W.
     dataset.WriteArray(data.swapaxes(-1, 0).swapaxes(-1, -2),
                        band_list=range(1, 1 + data.shape[-1]),
                        callback=TermProgress)
     del data, proj, geot
-    
+
     sen3.dataset = dataset
     sen3.dataset.FlushCache()

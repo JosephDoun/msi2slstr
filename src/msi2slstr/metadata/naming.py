@@ -15,14 +15,14 @@ class ProductName(str):
     """
     __template__ = "M2S_{0}.tif".format
 
-    def __new__(cls, sen2name:str, sen3name: str):
+    def __new__(cls, sen2name: str, sen3name: str):
         sen2name = Sen2Name(sen2name)
         sen3name = Sen3Name(sen3name)
         content = cls.__format_product_name__(sen2name, sen3name)
         content = cls.__template__("_".join(content))
         obj = str.__new__(cls, content)
         return obj
-    
+
     @classmethod
     def __format_product_name__(cls, sen2name: Sen2Name, sen3name: Sen3Name) -> list[str]:
         """

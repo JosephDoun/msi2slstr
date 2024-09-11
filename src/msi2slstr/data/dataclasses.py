@@ -20,7 +20,7 @@ class InconsistentFileType(Exception):
 class Pathlike(_PathLike):
     def __str__(self) -> str:
         return self.path
-    
+
     def __post_init__(self):
         self.path = str(self.path).rstrip("/")
         assert isinstance(self.path, str)
@@ -33,10 +33,11 @@ class Pathlike(_PathLike):
 @dataclass
 class File(Pathlike):
     path: str
-    
+
     def __post_init__(self):
         super().__post_init__()
         assert isfile(self.path), f"{self.path} is not a file."
+
 
 @dataclass
 class Dir(Pathlike):
@@ -50,6 +51,7 @@ class Dir(Pathlike):
 @dataclass
 class XML(File, ElementTree):
     root: Element = field(init=False)
+
     def __post_init__(self):
         super().__post_init__()
         self.parse(self.path)
@@ -84,7 +86,8 @@ class NETCDFSubDatasetPath:
             driver, file_path, self.subdataset_name = self.path.split(":")
             self.file_path = File(file_path.strip('"'))
         except Exception as e:
-            raise Exception(f"'{self.path}' does not point to a valid NETCDF subdataset.")
+            raise Exception(
+                f"'{self.path}' does not point to a valid NETCDF subdataset.")
 
 
 @dataclass
@@ -100,7 +103,6 @@ class NETCDFSubDataset:
     scale: float = field(init=False, default=1., repr=False)
     offset: float = field(init=False, default=.0, repr=False)
     metadata: dict = field(init=False, repr=False)
-    
 
     def __post_init__(self):
         self.__load_data__()
@@ -109,9 +111,12 @@ class NETCDFSubDataset:
         p = dirname(self.path.file_path)
 
         # Load corresponding grids.
-        self.elevation = NETCDFGeodetic(f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":elevation_{self.__grid__}')
-        self.longitude = NETCDFGeodetic(f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":longitude_{self.__grid__}')
-        self.latitude  = NETCDFGeodetic(f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":latitude_{self.__grid__}')
+        self.elevation = NETCDFGeodetic(
+            f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":elevation_{self.__grid__}')
+        self.longitude = NETCDFGeodetic(
+            f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":longitude_{self.__grid__}')
+        self.latitude = NETCDFGeodetic(
+            f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":latitude_{self.__grid__}')
 
         load_unscaled_S3_data(self.longitude,
                               self.latitude,
@@ -126,7 +131,7 @@ class NETCDFSubDataset:
         assert self.dataset,\
             "Incorrect path to NETCDF subdataset:\n"\
             "NETCDF:\"<path-to-file>\":<subdataset-name> format expected."
-        
+
         self.name = self.path.subdataset_name
         self.metadata = self.dataset.GetMetadata()
         self.scale = float(self.metadata.get(f"{self.name}#scale_factor"))
@@ -137,9 +142,9 @@ class NETCDFSubDataset:
         """
         Extract the correct grid name from the main filepath.
         """
-                                        # grid.nc      # grid
+        #                            gets `grid.nc`-> gets `grid`
         return self.path.file_path.path.split("_")[-1].split(".")[0]
-    
+
 
 @dataclass
 class NETCDFGeodetic(NETCDFSubDataset):
@@ -154,4 +159,3 @@ class DataReader:
 
     def __getitem__(self, coords: tuple[int, int, int, int]):
         return self.dataset.ReadAsArray(*coords)
-    

@@ -17,19 +17,16 @@ parser = argparse.ArgumentParser("msi2slstr",
                                  description=None,
                                  epilog=None)
 parser.description =\
-"""
-Deep Learning infused piece of software that attempts to fuse MSI and SLSTR
-sensor derived products onboard the Sentinel-2 and Sentinel-3 satellite
-platforms. Currently supporting the fusion of RBT and LST products to Sentinel-2 
-L1C.
-"""
+    """
+    AI assisted data fusion software for Sentinel-2 L1C and Sentinel-3 SLSTR Level 1 and 2 products.
+    """
 
 parser.epilog =\
-"""
-The model in use has been trained on daytime images of Central Europe\n
-at a maximum of 5 minutes different of acquisition time and that is\n
-the context in which it is expected to perform best.\n
-"""
+    """
+    The model in use has been trained on daytime images of Central Europe\n
+    at a maximum of 5 minutes different of acquisition time and that is\n
+    the context in which it is expected to perform best.\n
+    """
 
 set_arg = parser.add_argument
 set_arg("-l1c", "--sentinel2l1c", help="Path to a Sentinel-2 L1C SAFE archive.",
@@ -40,11 +37,8 @@ set_arg("-lst", "--sentinel3lst", help="Path to a Sentinel-3 LST SEN3 archive.",
         type=Dir, required=True, metavar="\"SEN3/LST/PATH\"", dest="lst",)
 
 
+args = parser.parse_args(args=argv[1:])
 
-environ["MODE"] = "INFER"
-
-
-args = parser.parse_args(args=argv[1:]);
 
 def main(args=args):
 
@@ -61,12 +55,13 @@ def main(args=args):
                          t_size=500)
     model = Runtime()
     preprocess = DataPreprocessor()
+
     for sen2tile, sen3tile in tqdm(data, desc="Fusing data..."):
         sen2tile, sen3tile = preprocess(sen2tile, sen3tile)
         Y_hat = model(sen2tile, sen3tile)[0]
         Y_hat = preprocess.reset_value_range(Y_hat)
         output.write_tiles(Y_hat)
-    
+
     output.write_metadata([
         ...
     ])
@@ -75,4 +70,4 @@ def main(args=args):
 
 
 if __name__ == "__main__":
-    main();
+    main()
