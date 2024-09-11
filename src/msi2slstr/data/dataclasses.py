@@ -1,6 +1,8 @@
+"""
+Definition of generic dataclasses and model validations.
+"""
 
 from typing import Any
-
 from datetime import datetime
 from xml.etree.ElementTree import ElementTree, Element
 from dataclasses import dataclass, field

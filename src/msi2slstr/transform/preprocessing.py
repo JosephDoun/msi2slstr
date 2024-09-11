@@ -1,3 +1,8 @@
+"""
+Definining preprocessor classes that encapsulate complete data preparation
+workflows.
+"""
+
 from typing import Any
 from .normalization import Normalizer, ndarray
 

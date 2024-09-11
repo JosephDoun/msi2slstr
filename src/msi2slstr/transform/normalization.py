@@ -1,3 +1,7 @@
+"""
+Data normalization module.
+"""
+
 from numpy import ndarray
 from numpy import array as _array
 
