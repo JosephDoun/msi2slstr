@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from osgeo.gdal import Dataset
 
-from .dataclasses import Archive, Image, File, XML 
+from .dataclasses import Archive, Image, File, XML
 from .dataclasses import InconsistentFileType, join, split
 from .gdalutils import build_unified_dataset
 
@@ -14,7 +14,8 @@ class SAFE(Archive):
     """
     Dataclass encapsulating a .SAFE archive.
     """
-    __nlength = len("S2B_MSIL1C_20231004T103809_N0509_R008_T31TDG_20231004T141941.SAFE")
+    __nlength = len(
+        "S2B_MSIL1C_20231004T103809_N0509_R008_T31TDG_20231004T141941.SAFE")
     __bnames = ("B01", "B02", "B03", "B04", "B05", "B06", "B07",
                 "B08", "B8A", "B09", "B10", "B11", "B12")
 
@@ -23,15 +24,17 @@ class SAFE(Archive):
     # datastrip: Dir = field(init=False)
     product: str = field(init=False, default="")
     tile: str = field(init=False, default="")
-    acquisition_time: datetime = field(init=False, default=datetime(2000, 1, 1))
+    acquisition_time: datetime = field(
+        init=False, default=datetime(2000, 1, 1))
     dataset: Dataset = field(init=False)
 
     def __post_init__(self):
         super().__post_init__()
         SAFE_archive_name = split(self.path)[-1]
-        
+
         if not len(SAFE_archive_name) == self.__nlength:
-            raise InconsistentFileType(f"{SAFE_archive_name} File does not follow naming convention.")
+            raise InconsistentFileType(
+                f"{SAFE_archive_name} File does not follow naming convention.")
 
         self.manifest = XML(join(self, "manifest.safe"))
 
@@ -39,13 +42,15 @@ class SAFE(Archive):
             # Index 2 holds the `dataObjectSection` of the manifest.
             File(join(self, p[0][0].get("href"))) for p in self.manifest.root[2]
         ]
-        
+
         self.MTD_file = XML(__file_locations[0])
-        
+
         __imgdata = filter(lambda x: "IMG_DATA" in x.path, __file_locations)
 
-        condition = lambda x: any([x.path.endswith(f"{b}.jp2") for b in self.__bnames])
-        sorting = lambda x: [self.__bnames.index(band) for band in self.__bnames if band in x.path][0]
+        def condition(x): return any(
+            [x.path.endswith(f"{b}.jp2") for b in self.__bnames])
+        def sorting(x): return [self.__bnames.index(band)
+                                for band in self.__bnames if band in x.path][0]
         bands = list(Image(p) for p in filter(condition, __imgdata))
         bands.sort(key=sorting)
 
@@ -75,7 +80,7 @@ class Sen2Name:
     def __post_init__(self):
         self.file_name = split(self.file_name)[-1]
         assert len(self.file_name) == get_sen2name_length(),\
-              f"{self.file_name} has unexpected length."
+            f"{self.file_name} has unexpected length."
 
         self.file_name, _ = self.file_name.split(".")
         (
@@ -87,4 +92,3 @@ class Sen2Name:
             self.tile,
             self.processing_date
         ) = self.file_name.split("_")
-    

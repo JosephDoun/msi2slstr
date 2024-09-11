@@ -13,11 +13,11 @@ onnx_providers = ["CPUExecutionProvider"]
 onnx_provider_options = None
 
 
-
 class _OpenRelativePath:
     """
     Context manager for dealing with reading package-level files.
     """
+
     def __init__(self, localpath: PathLike, mode: str = "rt") -> None:
         self.localpath = localpath
         self.mode = mode
@@ -33,7 +33,6 @@ class _OpenRelativePath:
     def __exit__(self, exc_type, exc_value, traceback):
         self.f_handle.close()
         chdir(self.root)
-
 
 
 def get_yaml_dict(path: str) -> dict:
@@ -72,5 +71,3 @@ def get_sen2name_length():
 
 def get_sen3name_length():
     return len("S3B_SL_1_RBT____20240826T102602_20240826T102902_20240826T122206_0180_097_008_2340_PS2_O_NR_004.SEN3")
-
-

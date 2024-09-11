@@ -13,9 +13,10 @@ class GeoArray(GeoArray):
 
     DEPRECATED
 
-    NOTE not worth it. Reading the Sentinel-2 image with `.ReadAsArray()`
+    NOTE inefficient. Reading the Sentinel-2 image with :code:`dataset.ReadAsArray()`
     is blocking and doubles memory usage during corregistration.
     """
+
     def __init__(self, path_or_array: str | ndarray | GeoArray | Dataset,
                  geotransform: tuple = None, projection: str = None,
                  bandnames: list = None, nodata: float = None,

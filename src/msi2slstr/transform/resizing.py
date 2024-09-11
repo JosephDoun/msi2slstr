@@ -2,7 +2,6 @@ import scipy
 import numpy as np
 
 
-
 class ValidAverageDownsampling:
     """
     Creates a spatially (meaning in x,y axes) coarser copy of the provided
@@ -11,6 +10,7 @@ class ValidAverageDownsampling:
     :param scale: The area of the spatial aggregation in number of elements (pixels.)
     :param scale: int
     """
+
     def __init__(self, scale: int) -> None:
         self.scale = int(scale)
 
@@ -24,7 +24,7 @@ class ValidAverageDownsampling:
         _sum = array.sum((-1, -2))
         _nzero = (array > 0).sum((-1, -2))
         return _sum / (_nzero + 1e-10)
-    
+
 
 class NearestNeighbourUpsampling:
     def __init__(self, scale: int) -> None:
