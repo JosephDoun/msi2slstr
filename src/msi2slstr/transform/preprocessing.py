@@ -29,6 +29,11 @@ class DataPreprocessor:
         """
         Executes workflow that finalizes input data for model consumption.
 
+        1. Constructs the batch dimension of data.
+        2. Enforces minimum value as 0.
+        3. Performs value normalization according to `normalization.yaml` values.
+        4. Casts input to `np.float32`
+
         :param sen2tuple: A tuple of Sentinel-2 3D patches with length equal to `batch_size`
         :type sen2tuple: tuple[ndarray]
         :param sen3tuple: A tuple of Sentinel-3 3D patches with length equal to `batch_size`
@@ -37,6 +42,7 @@ class DataPreprocessor:
         :return: The 4D input arrays prepared for model consuption
         :rtype: tuple[ndarray]
         """
+
         # Build batch dimension.
         sen2 = stack(sen2tuple, 0)
         sen3 = stack(sen3tuple, 0)
