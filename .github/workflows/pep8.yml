@@ -1,0 +1,11 @@
+name: Linting
+run-name: Lint-run // ${{ github.actor }} // ${{ github.event_name }} 
+on:
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+jobs:
+  flake:
+    runs-on: ubuntu-latest
+    steps:
+      - run: true

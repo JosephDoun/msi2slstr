@@ -14,9 +14,6 @@ keywords = ["TODO"]
 classifiers = ["TODO"]
 license = {text = "MIT"}
 dependencies = [
-		"gdal==3.5.3",
-		"pyproj==3.6.1",
-		"arosics",
 		"onnxruntime==1.18.1"
 		]
 

@@ -6,6 +6,11 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import sys, os
+
+sys.path.insert(0, os.path.abspath("../../src"))
+sys.path.insert(0, os.path.abspath("../../src/msi2slstr"))
+
 project = 'msi2slstr'
 copyright = '2024, Joseph Doundoulakis'
 author = 'Joseph Doundoulakis'
@@ -47,8 +52,4 @@ html_theme_options = {
     'github_repo': 'msi2slstr',
     'description': 'AI-based datafusion of S2L1C/S3RBT-LST satellite data.'
 }
-
-import sys, os
-
-sys.path.insert(0, os.path.abspath("../../src/msi2slstr"))
 
