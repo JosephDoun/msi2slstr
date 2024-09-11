@@ -1,3 +1,8 @@
+"""
+Module of Sentinel-3 related dataclasses and validation methods.
+"""
+
+
 from dataclasses import dataclass, field
 from .dataclasses import NETCDFSubDataset, Archive, File, XML
 from .dataclasses import join, split

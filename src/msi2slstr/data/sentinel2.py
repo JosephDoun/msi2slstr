@@ -1,3 +1,7 @@
+"""
+Module of Sentinel-2 related dataclasses and validation methods.
+"""
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from osgeo.gdal import Dataset
