@@ -1,8 +1,7 @@
 name: pep8
-run-name: flake8-run // ${{ github.actor }} // ${{ github.event_name }} 
+run-name: flake8-run // ${{ github.actor }} // ${{ github.event_name }} // ${{ github.ref_name }}
 on:
   pull_request:
-    branches: ["main"]
   workflow_dispatch:
 jobs:
   run-flake8:

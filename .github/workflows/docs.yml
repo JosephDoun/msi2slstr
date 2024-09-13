@@ -1,6 +1,6 @@
 
 name: docs
-run-name: docs-deployment // ${{ github.actor }} // ${{ github.event_name }} 
+run-name: docs-deployment // ${{ github.actor }} // ${{ github.event_name }} // ${{ github.ref_name }}
 on:
   release:
     types: ["published"]
