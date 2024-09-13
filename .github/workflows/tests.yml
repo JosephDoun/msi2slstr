@@ -1,11 +1,21 @@
-name: Tests
-run-name: Tests-run // ${{ github.actor }} // ${{ github.event_name }} 
+name: tests
+run-name: tests // ${{ github.actor }} // ${{ github.event_name }} 
 on:
   pull_request:
-    branches: ["main"]
+    branches: ["main", "development"]
+  push:
+    branches: ["development"]
   workflow_dispatch:
 jobs:
-  release:
+  run-tests:
     runs-on: ubuntu-latest
     steps:
-      - run: true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: verify installation
+        run: |
+            sudo apt-get install gdal-bin libgdal-dev python3-gdal
+            pip install -U .
+            python3 -c "import osgeo"

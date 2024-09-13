@@ -1,11 +1,11 @@
-name: Linting
-run-name: Lint-run // ${{ github.actor }} // ${{ github.event_name }} 
+name: pep8
+run-name: flake8-run // ${{ github.actor }} // ${{ github.event_name }} 
 on:
   pull_request:
     branches: ["main"]
   workflow_dispatch:
 jobs:
-  flake:
+  run-flake8:
     runs-on: ubuntu-latest
     steps:
       - run: true

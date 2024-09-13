@@ -11,7 +11,7 @@ class Normalizer:
     Class to normalize given array according to the normalizer state, in a
     channelwise manner.
 
-    :math:`Array_normal = (Array - OFFSET) / (SCALE + e)`
+    .. math:: A_{\\mathrm{normalized}} = \\frac{(A - offset)}{(scale + e)}
 
     :param offset: A tuple of floats with the per channel value by which to offset
         the provided array's value range. Has to be broadcastable to the array's shape.
