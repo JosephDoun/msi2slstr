@@ -13,9 +13,7 @@ requires-python = ">=3.8"
 keywords = ["TODO"]
 classifiers = ["TODO"]
 license = {text = "MIT"}
-dependencies = [
-		"onnxruntime==1.18.1"
-		]
+dynamic = ["dependencies"]
 
 [project.scripts]
 msi2slstr = "msi2slstr.__main__:main"
