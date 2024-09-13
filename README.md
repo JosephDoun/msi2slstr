@@ -17,4 +17,4 @@ AI assisted data fusion software for Sentinel-2 L1C and Sentinel-3 SLSTR Level 1
 
 #### How to cite:
 
-*Doundoulakis, I. (2024) “msi2slstr”. Zenodo. doi: 10.5281/zenodo.13755873.*
+*Doundoulakis, I. (2024) “msi2slstr: AI assisted data fusion software for Sentinel-2 L1C and Sentinel-3 SLSTR Level 1 and 2 products”. Zenodo. doi: 10.5281/zenodo.13760429.*
