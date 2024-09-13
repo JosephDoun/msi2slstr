@@ -1,8 +1,8 @@
 from collections.abc import Generator
 from dataclasses import dataclass, field
-from osgeo.gdal import Dataset, TermProgress
+from osgeo.gdal import Dataset
 from osgeo.gdal_array import NumericTypeCodeToGDALTypeCode
-from numpy import dtype, ndarray, float32, int16, int32
+from numpy import dtype, ndarray, float32
 from typing import Any, Sequence
 
 from .sentinel2 import Sentinel2L1C

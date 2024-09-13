@@ -1,4 +1,4 @@
-name: pypi-deployment
+name: pypi
 run-name: pypi-deployment // ${{ github.actor }} // ${{ github.event_name }} // ${{ github.ref_name }}
 on:
   release:
@@ -8,4 +8,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
       - run: true
