@@ -1,7 +1,9 @@
 name: pep8
 run-name: linter // ${{ github.actor }} // ${{ github.event_name }} // ${{ github.ref_name }}
 on:
-  pull_request:
+  push:
+    branches: ["main", "development"]
+    paths: [src/**.py, tests/**.py]
   workflow_dispatch:
 jobs:
   run-flake8:
