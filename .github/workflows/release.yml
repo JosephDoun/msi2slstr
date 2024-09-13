@@ -1,11 +1,11 @@
-name: Release
-run-name: PYPI-run // ${{ github.actor }} // ${{ github.event_name }} 
+name: pypi-deployment
+run-name: pypi-deployment // ${{ github.actor }} // ${{ github.event_name }} 
 on:
   release:
     types: ["published"]
   workflow_dispatch:
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
     steps:
       - run: true
