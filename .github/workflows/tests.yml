@@ -20,4 +20,3 @@ jobs:
             python3 -c "import osgeo"
       - run: |
             echo placeholder python3 -m unittest tests
-
