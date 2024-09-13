@@ -2,10 +2,9 @@
 Module of Sentinel-3 related dataclasses and validation methods.
 """
 
-
+from os.path import join, split
 from dataclasses import dataclass, field
 from .dataclasses import NETCDFSubDataset, Archive, File, XML
-from .dataclasses import join, split
 from .gdalutils import load_unscaled_S3_data
 from .gdalutils import execute_geolocation
 from .gdalutils import build_unified_dataset

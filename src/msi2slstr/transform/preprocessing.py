@@ -3,7 +3,6 @@ Definining preprocessor classes that encapsulate complete data preparation
 workflows.
 """
 
-from typing import Any
 from .normalization import Normalizer, ndarray
 
 from ..config import SEN2_MINMAX
@@ -31,12 +30,15 @@ class DataPreprocessor:
 
         1. Constructs the batch dimension of data.
         2. Enforces minimum value as 0.
-        3. Performs value normalization according to `normalization.yaml` values.
+        3. Performs value normalization according to 
+        `normalization.yaml` values.
         4. Casts input to `np.float32`
 
-        :param sen2tuple: A tuple of Sentinel-2 3D patches with length equal to `batch_size`
+        :param sen2tuple: A tuple of Sentinel-2 3D patches with length 
+        equal to `batch_size`
         :type sen2tuple: tuple[ndarray]
-        :param sen3tuple: A tuple of Sentinel-3 3D patches with length equal to `batch_size`
+        :param sen3tuple: A tuple of Sentinel-3 3D patches with length 
+        equal to `batch_size`
         :type sen3tuple: tuple[ndarray]
 
         :return: The 4D input arrays prepared for model consuption

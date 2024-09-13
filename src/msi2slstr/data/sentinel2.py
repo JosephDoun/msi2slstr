@@ -1,13 +1,13 @@
 """
 Module of Sentinel-2 related dataclasses and validation methods.
 """
-
+from os.path import join, split
 from dataclasses import dataclass, field
 from datetime import datetime
 from osgeo.gdal import Dataset
 
 from .dataclasses import Archive, Image, File, XML
-from .dataclasses import InconsistentFileType, join, split
+from .dataclasses import InconsistentFileType
 from .gdalutils import build_unified_dataset
 
 from ..config import get_sen2name_length

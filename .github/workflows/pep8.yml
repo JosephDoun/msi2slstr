@@ -1,10 +1,17 @@
 name: pep8
-run-name: flake8-run // ${{ github.actor }} // ${{ github.event_name }} // ${{ github.ref_name }}
+run-name: linter // ${{ github.actor }} // ${{ github.event_name }} // ${{ github.ref_name }}
 on:
-  pull_request:
+  push:
+    branches: ["main", "development"]
   workflow_dispatch:
 jobs:
   run-flake8:
     runs-on: ubuntu-latest
     steps:
-      - run: true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - run: |
+            pip install -U flake8
+            flake8 src/ tests/

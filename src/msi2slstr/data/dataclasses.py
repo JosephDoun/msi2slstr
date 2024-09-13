@@ -3,11 +3,11 @@ Definition of generic dataclasses and model validations.
 """
 
 from typing import Any
-from datetime import datetime
+# from datetime import datetime
 from xml.etree.ElementTree import ElementTree, Element
 from dataclasses import dataclass, field
 from osgeo.gdal import Open, Dataset
-from os.path import isdir, join, exists, isfile, sep, split, dirname
+from os.path import isdir, join, exists, isfile, dirname
 from os import PathLike as _PathLike
 
 from .gdalutils import load_unscaled_S3_data

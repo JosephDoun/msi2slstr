@@ -1,4 +1,3 @@
-from os.path import split
 
 from ..data.sentinel2 import Sen2Name
 from ..data.sentinel3 import Sen3Name

@@ -1,6 +1,5 @@
 import argparse
 
-from os import environ
 from sys import argv
 from tqdm import tqdm
 
@@ -18,22 +17,26 @@ parser = argparse.ArgumentParser("msi2slstr",
                                  epilog=None)
 parser.description =\
     """
-    AI assisted data fusion software for Sentinel-2 L1C and Sentinel-3 SLSTR Level 1 and 2 products.
+    AI assisted data fusion software for Sentinel-2 L1C and
+    Sentinel-3 SLSTR Level 1 and 2 products.
     """
 
 parser.epilog =\
     """
-    The model in use has been trained on daytime images of Central Europe\n
-    at a maximum of 5 minutes different of acquisition time and that is\n
-    the context in which it is expected to perform best.\n
+    The model in use has been trained on daytime images of Central Europe
+    at a maximum of 5 minutes different of acquisition time and that is
+    the context in which it is expected to perform best.
     """
 
 set_arg = parser.add_argument
-set_arg("-l1c", "--sentinel2l1c", help="Path to a Sentinel-2 L1C SAFE archive.",
+set_arg("-l1c", "--sentinel2l1c",
+        help="Path to a Sentinel-2 L1C SAFE archive.",
         type=Dir, required=True, metavar="\"SEN2/L1C/PATH\"", dest="l1c")
-set_arg("-rbt", "--sentinel3rbt", help="Path to a Sentinel-3 RBT SEN3 archive.",
+set_arg("-rbt", "--sentinel3rbt",
+        help="Path to a Sentinel-3 RBT SEN3 archive.",
         type=Dir, required=True, metavar="\"SEN3/RBT/PATH\"", dest="rbt")
-set_arg("-lst", "--sentinel3lst", help="Path to a Sentinel-3 LST SEN3 archive.",
+set_arg("-lst", "--sentinel3lst",
+        help="Path to a Sentinel-3 LST SEN3 archive.",
         type=Dir, required=True, metavar="\"SEN3/LST/PATH\"", dest="lst",)
 
 
