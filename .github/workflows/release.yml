@@ -1,5 +1,5 @@
 name: pypi-deployment
-run-name: pypi-deployment // ${{ github.actor }} // ${{ github.event_name }} 
+run-name: pypi-deployment // ${{ github.actor }} // ${{ github.event_name }} // ${{ github.ref_name }}
 on:
   release:
     types: ["published"]
