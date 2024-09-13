@@ -3,6 +3,7 @@ run-name: tests // ${{ github.actor }} // ${{ github.event_name }} // ${{ github
 on:
   push:
     branches: ["main", "development"]
+    paths: [src/, tests/]
   workflow_dispatch:
 jobs:
   run-tests:

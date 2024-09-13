@@ -3,6 +3,7 @@ run-name: linter // ${{ github.actor }} // ${{ github.event_name }} // ${{ githu
 on:
   push:
     branches: ["main", "development"]
+    paths: [src/**.py, tests/**.py]
   workflow_dispatch:
 jobs:
   run-flake8:
