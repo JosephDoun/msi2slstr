@@ -1,5 +1,5 @@
 from setuptools import setup
-from  src.msi2slstr import __doc__ as description
+from src.msi2slstr import __doc__ as description
 
 import subprocess
 import version

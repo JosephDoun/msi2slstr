@@ -1,7 +1,6 @@
 name: tests
 run-name: tests // ${{ github.actor }} // ${{ github.event_name }} // ${{ github.ref_name }}
 on:
-  pull_request:
   push:
     branches: ["main", "development"]
     paths: [src/, tests/]
@@ -21,4 +20,3 @@ jobs:
             python3 -c "import osgeo"
       - run: |
             echo placeholder python3 -m unittest tests
-
