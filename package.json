@@ -1,0 +1,5 @@
+{
+  "scripts": {
+  	"changelog": "npx conventional-changelog-cli -t v -p conventionalcommits -o CHANGELOG.md -r 0"
+  }
+}

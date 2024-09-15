@@ -8,13 +8,17 @@
 
 import sys, os
 
+sys.path.insert(0, os.path.abspath("../../"))
 sys.path.insert(0, os.path.abspath("../../src"))
 sys.path.insert(0, os.path.abspath("../../src/msi2slstr"))
+
+from version import __version__
 
 project = 'msi2slstr'
 copyright = '2024, Joseph Doundoulakis'
 author = 'Joseph Doundoulakis'
-release = '0.0.0-beta'
+
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -28,6 +32,7 @@ extensions = [
     'myst_parser' 
     ]
 
+suppress_warnings = ["myst.header"]
 templates_path = ['_templates']
 exclude_patterns = []
 
