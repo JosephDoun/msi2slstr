@@ -34,6 +34,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+package-lock.json
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -78,7 +79,7 @@ instance/
 .scrapy
 
 # Sphinx documentation
-docs/_build/
+_build/
 
 # PyBuilder
 .pybuilder/
@@ -139,6 +140,7 @@ ENV/
 env.bak/
 venv.bak/
 *.qgz
+node_modules/
 
 # Spyder project settings
 .spyderproject
