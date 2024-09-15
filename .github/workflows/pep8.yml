@@ -3,7 +3,7 @@ run-name: linter // ${{ github.actor }} // ${{ github.event_name }} // ${{ githu
 on:
   push:
     branches: ["main", "development"]
-    paths: [src/**.py, tests/**.py]
+    paths: ["**.py"]
   workflow_dispatch:
 jobs:
   run-flake8:
@@ -15,4 +15,4 @@ jobs:
           python-version: "3.10"
       - run: |
             pip install -U flake8
-            flake8 src/ tests/
+            flake8 src/ test/
