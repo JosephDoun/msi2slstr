@@ -1,4 +1,4 @@
-msi2slstr.transform.normalization
+﻿msi2slstr.transform.normalization
 =================================
 
 .. automodule:: msi2slstr.transform.normalization
@@ -9,4 +9,5 @@ msi2slstr.transform.normalization
    .. autosummary::
    
       Normalizer
+      Standardizer
    

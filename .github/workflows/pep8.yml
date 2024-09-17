@@ -15,4 +15,4 @@ jobs:
           python-version: "3.10"
       - run: |
             pip install -U flake8
-            flake8 src/ test/
+            flake8 src/ tests/
