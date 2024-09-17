@@ -15,8 +15,8 @@ jobs:
           python-version: "3.10"
       - name: verify installation
         run: |
-            sudo apt-get install gdal-bin libgdal-dev python3-gdal
+            sudo apt-get update && sudo apt-get install gdal-bin libgdal-dev python3-gdal
             pip install -U .
             python3 -c "import osgeo"
       - run: |
-            echo placeholder python3 -m unittest tests
+            python3 -m unittest -v
