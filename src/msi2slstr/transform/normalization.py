@@ -55,7 +55,7 @@ class Normalizer:
         :return: Array with original values.
         :rtype: :class:`ndarray`
         """
-        return array * (self.scale - self.offset + self.e) + self.offset
+        return array * (self.scale + self.e) + self.offset
 
 
 class Standardizer:
