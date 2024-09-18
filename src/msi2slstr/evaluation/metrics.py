@@ -4,8 +4,6 @@ from numpy import ndarray
 from numpy import corrcoef
 from numpy import sqrt
 
-from typing import Self
-
 from ..transform.normalization import Standardizer
 
 
@@ -18,7 +16,7 @@ class Pearson(ndarray):
             ...
         \\end{aligned}
     """
-    def __new__(cls, x: ndarray, y: ndarray) -> Self:
+    def __new__(cls, x: ndarray, y: ndarray) -> "Pearson":
         coef = corrcoef(x.flatten(), y.flatten())
         result = coef[0, 1]
         return result.view(cls)
@@ -36,7 +34,7 @@ class SRMSE(ndarray):
     standard: Standardizer = Standardizer((-1, -2))
     
     def __new__(cls, x: ndarray, y: ndarray,
-                dims: tuple[int]=(-1, -2)) -> Self:
+                dims: tuple[int]=(-1, -2)) -> "SRMSE":
         x = cls.standard(x)
         y = cls.standard(y)
         result = sqrt((x - y) ** 2).mean(axis=dims)
@@ -71,7 +69,7 @@ class SSIM(ndarray):
     """
     _C = 1e-10
     def __new__(cls, x: ndarray, y: ndarray,
-                dims: tuple[int]=(-1, -2)) -> Self:
+                dims: tuple[int]=(-1, -2)) -> "SSIM":
         mx = x.mean(axis=dims, keepdims=True)
         my = y.mean(axis=dims, keepdims=True)
         sx = x. std(axis=dims, keepdims=True)
