@@ -13,6 +13,7 @@
    align
    config
    data
+   evaluation
    metadata
    model
    transform
