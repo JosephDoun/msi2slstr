@@ -1,4 +1,4 @@
-﻿msi2slstr.align
+msi2slstr.align
 ===============
 
 .. automodule:: msi2slstr.align

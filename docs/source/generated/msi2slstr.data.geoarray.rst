@@ -1,4 +1,4 @@
-﻿msi2slstr.data.geoarray
+msi2slstr.data.geoarray
 =======================
 
 .. automodule:: msi2slstr.data.geoarray

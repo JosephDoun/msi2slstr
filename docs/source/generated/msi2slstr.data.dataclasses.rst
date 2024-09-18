@@ -1,4 +1,4 @@
-﻿msi2slstr.data.dataclasses
+msi2slstr.data.dataclasses
 ==========================
 
 .. automodule:: msi2slstr.data.dataclasses
