@@ -1,5 +1,5 @@
 """
-Definition of generic dataclasses and model validations.
+Definition of generic dataclasses and data models.
 """
 
 from typing import Any
@@ -85,9 +85,9 @@ class NETCDFSubDatasetPath:
 
     def __post_init__(self):
         try:
-            driver, file_path, self.subdataset_name = self.path.split(":")
+            _, file_path, self.subdataset_name = self.path.split(":")
             self.file_path = File(file_path.strip('"'))
-        except Exception as e:
+        except Exception:
             raise Exception(
                 f"'{self.path}' does not point to a valid NETCDF subdataset.")
 
@@ -112,13 +112,23 @@ class NETCDFSubDataset:
         # Get SEN3 path.
         p = dirname(self.path.file_path)
 
+        template = 'NETCDF:"{path}":{subdataset}'.format
+
         # Load corresponding grids.
         self.elevation = NETCDFGeodetic(
-            f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":elevation_{self.__grid__}')
+            template(path=join(p, f"geodetic_{self.__grid__}.nc"),
+                     subdataset=f'elevation_{self.__grid__}')
+        )
+
         self.longitude = NETCDFGeodetic(
-            f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":longitude_{self.__grid__}')
+            template(path=join(p, f"geodetic_{self.__grid__}.nc"),
+                     subdataset=f'longitude_{self.__grid__}')
+        )
+
         self.latitude = NETCDFGeodetic(
-            f'NETCDF:"{join(p, f"geodetic_{self.__grid__}.nc")}":latitude_{self.__grid__}')
+            template(path=join(p, f"geodetic_{self.__grid__}.nc"),
+                     subdataset=f'latitude_{self.__grid__}')
+        )
 
         load_unscaled_S3_data(self.longitude,
                               self.latitude,
@@ -130,9 +140,9 @@ class NETCDFSubDataset:
         self.path = NETCDFSubDatasetPath(self.path)
         self.dataset = Open(self.path.path)
 
-        assert self.dataset,\
-            "Incorrect path to NETCDF subdataset:\n"\
-            "NETCDF:\"<path-to-file>\":<subdataset-name> format expected."
+        assert self.dataset, \
+            f"{self.path} expected to be in:\n"\
+            "NETCDF:\"<path-to-file>\":<subdataset-name> format."
 
         self.name = self.path.subdataset_name
         self.metadata = self.dataset.GetMetadata()
@@ -144,10 +154,11 @@ class NETCDFSubDataset:
         """
         Extract the correct grid name from the main filepath.
         """
-        #                            gets `grid.nc`-> gets `grid`
+        #                               gets `grid.nc`-> gets `grid`
         return self.path.file_path.path.split("_")[-1].split(".")[0]
 
 
+# Not needed TODO
 @dataclass
 class NETCDFGeodetic(NETCDFSubDataset):
     def __post_init__(self):
@@ -156,6 +167,9 @@ class NETCDFGeodetic(NETCDFSubDataset):
 
 @dataclass
 class DataReader:
+    """
+    Base class that defines :meth:`__getitem__` for reading image data.
+    """
 
     dataset: Dataset
 

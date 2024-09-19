@@ -23,7 +23,8 @@ class ProductName(str):
         return obj
 
     @classmethod
-    def __format_product_name__(cls, sen2name: Sen2Name, sen3name: Sen3Name) -> list[str]:
+    def __format_product_name__(
+            cls, sen2name: Sen2Name, sen3name: Sen3Name) -> list[str]:
         """
         Returns an iterable of strings to include in the output file name.
         """

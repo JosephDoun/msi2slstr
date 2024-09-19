@@ -1,4 +1,4 @@
-import scipy
+# import scipy
 import numpy as np
 
 
@@ -7,7 +7,8 @@ class ValidAverageDownsampling:
     Creates a spatially (meaning in x,y axes) coarser copy of the provided
     array by averaging the valid values.
 
-    :param scale: The area of the spatial aggregation in number of elements (pixels.)
+    :param scale: The area of the spatial aggregation in number of elements
+        (pixels.)
     :param scale: int
     """
 

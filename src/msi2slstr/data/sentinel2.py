@@ -44,7 +44,8 @@ class SAFE(Archive):
 
         __file_locations = [
             # Index 2 holds the `dataObjectSection` of the manifest.
-            File(join(self, p[0][0].get("href"))) for p in self.manifest.root[2]
+            File(join(self, p[0][0].get("href")))
+            for p in self.manifest.root[2]
         ]
 
         self.MTD_file = XML(__file_locations[0])
@@ -83,7 +84,7 @@ class Sen2Name:
 
     def __post_init__(self):
         self.file_name = split(self.file_name)[-1]
-        assert len(self.file_name) == get_sen2name_length(),\
+        assert len(self.file_name) == get_sen2name_length(), \
             f"{self.file_name} has unexpected length."
 
         self.file_name, _ = self.file_name.split(".")

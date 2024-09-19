@@ -32,9 +32,9 @@ class SRMSE(ndarray):
         \\end{aligned}
     """
     standard: Standardizer = Standardizer((-1, -2))
-    
+
     def __new__(cls, x: ndarray, y: ndarray,
-                dims: tuple[int]=(-1, -2)) -> "SRMSE":
+                dims: tuple[int] = (-1, -2)) -> "SRMSE":
         x = cls.standard(x)
         y = cls.standard(y)
         result = sqrt((x - y) ** 2).mean(axis=dims)
@@ -43,9 +43,9 @@ class SRMSE(ndarray):
 
 class SSIM(ndarray):
     """
-    Global SSIM. Collapses elements along :attr:`dims` of the provided arrays 
-    to calculate the metric for the elements that remain. Defaults to a per-channel
-    computation.
+    Global SSIM. Collapses elements along :attr:`dims` of the provided arrays
+    to calculate the metric for the elements that remain. Defaults to a
+    per-channel computation.
 
     :param x: First array to use in the computation of SSIM.
     :type x: `ndarray`
@@ -57,19 +57,23 @@ class SSIM(ndarray):
     .. math::
 
         \\begin{aligned}
-            l = \\frac{2 \\bar{x} \\bar{y} + \\epsilon}{\\bar{x} ^ 2 + \\bar{y} ^ 2 + \\epsilon },\\quad&
-            c = \\frac{2 \\sigma_{x} \\sigma_{y} + \\epsilon}{\\sigma_{x} ^ 2 + \\sigma_{y} ^ 2 + \\epsilon },\\quad
-            s = \\frac{\\overline{(x - \\bar{x}) (y - \\bar{y})} + \\epsilon}{\\sigma_{x} \\sigma_{y} + \\epsilon}
-            
+            l = \\frac{2 \\bar{x} \\bar{y} + \\epsilon}
+            {\\bar{x} ^ 2 + \\bar{y} ^ 2 + \\epsilon },\\quad&
+            c = \\frac{2 \\sigma_{x} \\sigma_{y} + \\epsilon}
+            {\\sigma_{x} ^ 2 + \\sigma_{y} ^ 2 + \\epsilon },\\quad
+            s = \\frac{\\overline{(x - \\bar{x}) (y - \\bar{y})} + \\epsilon}
+            {\\sigma_{x} \\sigma_{y} + \\epsilon}
+
             \\newline
             \\newline
-            SSIM& = l \\times c \\times s,\quad SSIM \\in [0, 1]&
+            SSIM& = l \\times c \\times s,\\quad SSIM \\in [0, 1]&
         \\end{aligned}
 
     """
     _C = 1e-10
+
     def __new__(cls, x: ndarray, y: ndarray,
-                dims: tuple[int]=(-1, -2)) -> "SSIM":
+                dims: tuple[int] = (-1, -2)) -> "SSIM":
         mx = x.mean(axis=dims, keepdims=True)
         my = y.mean(axis=dims, keepdims=True)
         sx = x. std(axis=dims, keepdims=True)

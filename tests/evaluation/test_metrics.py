@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from msi2slstr.evaluation.metrics import *
+from msi2slstr.evaluation.metrics import Pearson, SRMSE, SSIM
 
 
 class Test_Pearson(unittest.TestCase):
@@ -10,7 +10,7 @@ class Test_Pearson(unittest.TestCase):
         self.a = np.random.rand(12, 10, 10)
         self.b = np.ones((12, 10, 10))
         self.c = np.random.rand(1, 10, 10)
-    
+
     def test_min(self):
         result = Pearson(self.a, -self.a)
         self.assertTrue(np.isclose(result, -1))
@@ -32,11 +32,11 @@ class Test_SRMSE(unittest.TestCase):
         self.c = np.random.randn(1, 10, 10)
         self.mean = 0
         self.c = 0
-    
+
     def test_min(self):
         result = SRMSE(self.a, self.a)
         self.assertTrue(np.allclose(result, 0))
-    
+
     def test_max(self):
         scale = np.random.randn(1, 12, 1, 1)
         offset = np.random.randn(1, 12, 1, 1)

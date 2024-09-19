@@ -2,7 +2,7 @@
 ONNX runtime.
 """
 
-from onnxruntime import SessionIOBinding
+# from onnxruntime import SessionIOBinding
 from onnxruntime import InferenceSession
 from onnxruntime import SessionOptions, RunOptions
 from numpy import ndarray
@@ -16,9 +16,10 @@ class Runtime:
         self.session_options = SessionOptions()
 
         with _OpenRelativePath("../resources/model.onnx", "rb") as model_file:
-            self.session = InferenceSession(bytes(model_file.read()),
-                                            providers=onnx_providers,
-                                            provider_options=onnx_provider_options,)
+            self.session = InferenceSession(
+                bytes(model_file.read()),
+                providers=onnx_providers,
+                provider_options=onnx_provider_options)
 
         self.run_options = RunOptions()
         self.run_options

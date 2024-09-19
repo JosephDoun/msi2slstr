@@ -44,6 +44,7 @@ def get_yaml_dict(path: str) -> dict:
 from .libloader import cuda_failed
 
 
+# TODO refactor code so this does not need to be here.
 def is_cuda_available():
     """
     It checks if the dependencies are present and loaded. It does not
@@ -66,8 +67,10 @@ SEN3_MINMAX = _NORMAL_MAXMIN['SEN3']
 
 
 def get_sen2name_length():
-    return len("S2B_MSIL1C_20231004T103809_N0509_R008_T31TDG_20231004T141941.SAFE")
+    return len("S2B_MSIL1C_20231004T103809_N0509"
+               "_R008_T31TDG_20231004T141941.SAFE")
 
 
 def get_sen3name_length():
-    return len("S3B_SL_1_RBT____20240826T102602_20240826T102902_20240826T122206_0180_097_008_2340_PS2_O_NR_004.SEN3")
+    return len("S3B_SL_1_RBT____20240826T102602_20240826T102902"
+               "_20240826T122206_0180_097_008_2340_PS2_O_NR_004.SEN3")

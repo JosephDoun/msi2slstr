@@ -1,4 +1,4 @@
-"""    
+"""
 Helper module for avoiding circular imports during annotations.
 """
 
