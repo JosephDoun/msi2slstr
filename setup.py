@@ -26,4 +26,5 @@ setup(name="msi2slstr",
       install_requires=[f"gdal=={get_gdal_system_version()}",
                         "pyproj==3.6.1",
                         "arosics==1.9.2",
-                        "onnxruntime-gpu==1.19.2"],)
+                        "onnxruntime-gpu==1.19.2",
+                        "pyyaml"],)
