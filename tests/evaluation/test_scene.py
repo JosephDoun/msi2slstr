@@ -22,7 +22,7 @@ class TestEvaluation(unittest.TestCase):
         self.assertListEqual(list(map(lambda x: x.__name__,
                                       self.evaluate.metrics)),
                              list(self.evaluate.metric_maps.keys()))
-        
+
     def test_record_length(self):
         # The records length should be times the batch size.
 
@@ -31,4 +31,3 @@ class TestEvaluation(unittest.TestCase):
 
         for records in self.evaluate.metric_maps.values():
             self.assertEqual(len(records), 10 * self.a.shape[0])
-

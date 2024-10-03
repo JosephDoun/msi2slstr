@@ -35,20 +35,20 @@ class Evaluate:
                 # Record each tile separately for the generation
                 # of quality maps.
                 self.metric_maps[metric.__name__].append(t_metric)
-            
+
             self._counter += 1
 
     def __repr__(self) -> str:
         return "\n".join([f"{key}: {array(value).mean()}"
                           for key, value in self.metric_maps])
-    
+
     def __str__(self) -> str:
         return self.__repr__()
-    
+
     @property
     def quality_maps(self):
         """
-        Returns a 2D array per metric that maps fusion quality to the scene's 
+        Returns a 2D array per metric that maps fusion quality to the scene's
         geometry.
         """
         ...

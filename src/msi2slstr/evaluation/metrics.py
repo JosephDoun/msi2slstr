@@ -1,11 +1,8 @@
 """Evaluation metrics definition.
 """
-from typing import Any
-from numpy import array
 from numpy import ndarray
 from numpy import sum, multiply
 from numpy import sqrt
-from numpy import float32
 
 from ..transform.normalization import Standardizer
 
@@ -25,8 +22,10 @@ class r(ndarray):
         xnorm = x - x.mean((-1, -2), keepdims=True)
         ynorm = y - y.mean((-1, -2), keepdims=True)
         numer = sum(xnorm * ynorm, axis=(-1, -2), keepdims=True)
-        denom = sqrt(multiply(sum(xnorm * xnorm, axis=(-1, -2), keepdims=True),
-                              sum(ynorm * ynorm, axis=(-1, -2), keepdims=True)))
+        denom = sqrt(multiply(sum(xnorm * xnorm, axis=(-1, -2),
+                                  keepdims=True),
+                              sum(ynorm * ynorm, axis=(-1, -2),
+                                  keepdims=True)))
         result = numer / (denom + cls._C)
         return result.view(cls).reshape(result.shape[0], -1)
 
