@@ -1,5 +1,6 @@
 """Evaluation metrics definition.
 """
+from typing import Any
 from numpy import array
 from numpy import ndarray
 from numpy import sum, multiply
@@ -11,7 +12,7 @@ from ..transform.normalization import Standardizer
 
 class r(ndarray):
     """
-    Pearson coefficient numpy implementation.
+    Pearson product-moment correlation coefficient.
 
     .. math::
         \\begin{aligned}
