@@ -1,13 +1,15 @@
 """Evaluation metrics definition.
 """
+from numpy import array
 from numpy import ndarray
-from numpy import corrcoef
+from numpy import sum, multiply
 from numpy import sqrt
+from numpy import float32
 
 from ..transform.normalization import Standardizer
 
 
-class corrcoef(ndarray):
+class r(ndarray):
     """
     Pearson coefficient numpy implementation.
 
@@ -16,10 +18,16 @@ class corrcoef(ndarray):
             ...
         \\end{aligned}
     """
-    def __new__(cls, x: ndarray, y: ndarray) -> "corrcoef":
-        coef = corrcoef(x.flatten(), y.flatten())
-        result = coef[0, 1]
-        return result.view(cls)
+    _C = 1e-10
+
+    def __new__(cls, x: ndarray, y: ndarray) -> "r":
+        xnorm = x - x.mean((-1, -2), keepdims=True)
+        ynorm = y - y.mean((-1, -2), keepdims=True)
+        numer = sum(xnorm * ynorm, axis=(-1, -2), keepdims=True)
+        denom = sqrt(multiply(sum(xnorm * xnorm, axis=(-1, -2), keepdims=True),
+                              sum(ynorm * ynorm, axis=(-1, -2), keepdims=True)))
+        result = numer / (denom + cls._C)
+        return result.view(cls).reshape(result.shape[0], -1)
 
 
 class srmse(ndarray):
