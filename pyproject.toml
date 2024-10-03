@@ -25,13 +25,13 @@ readme = {file = ["README.md"]}
 msi2slstr = "msi2slstr.__main__:main"
 
 [project.optional-dependencies]
-cuda11 = [
-"nvidia-cublas-cu11==11.6.5.2",
-"nvidia-cudnn-cu11==8.2.4",
-"nvidia-curand-cu11==9.3.0.75",
-"nvidia-cufft-cu11==9.3.0.75",
+cu12 = [
+	"nvidia-cuda-runtime-cu12 == 12.6.68",
+	"nvidia-cublas-cu12 == 12.6.1.4",
+	"nvidia-cudnn-cu12 == 9.4.0.58",
+	"nvidia-curand-cu12 == 10.3.7.68",
+	"nvidia-cufft-cu12 == 11.2.6.59"
 ]
-cuda12 = []
 
 [tool.setuptools.packages.find]
 where = ["src"]

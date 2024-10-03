@@ -1,4 +1,4 @@
-﻿msi2slstr.data
+msi2slstr.data
 ==============
 
 .. automodule:: msi2slstr.data

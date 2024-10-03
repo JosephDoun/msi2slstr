@@ -1,3 +1,5 @@
+from osgeo_utils.gdal_calc import Calc
+
 from osgeo.gdal import BuildVRT, BuildVRTOptions
 from osgeo.gdal import Translate, TranslateOptions
 from osgeo.gdal import Warp, WarpOptions
@@ -196,7 +198,8 @@ def trim_sen3_geometry(sen3: Sentinel3RBT) -> None:
 
 def trim_sen2_geometry(sen2: Sentinel2L1C, sen3: Sentinel3RBT) -> None:
     """
-    Trim Sentinel-2 image geometry to match the bounding box of Sentinel-3 scene.
+    Trim Sentinel-2 image geometry to match the bounding box of Sentinel-3
+    scene.
 
     For debugging the trimming functions should write to disk directly.
     """
@@ -259,9 +262,6 @@ def get_corners(dataset: Dataset):
     return Info(dataset, options=options)['cornerCoordinates']
 
 
-from .typing import NETCDFSubDataset
-
-
 def set_vrt_subdataset_geolocation_domain(*netcdfs: NETCDFSubDataset):
     """
     Create a GEOLOCATION metadata domain in VRT datasets to
@@ -279,9 +279,6 @@ def set_vrt_subdataset_geolocation_domain(*netcdfs: NETCDFSubDataset):
              "PIXEL_STEP": 1,
              "LINE_OFFSET": 0,
              "LINE_STEP": 1}, "GEOLOCATION")
-
-
-from osgeo_utils.gdal_calc import Calc
 
 
 def apply_calculation(dataset: Dataset, calculation: str) -> Dataset:

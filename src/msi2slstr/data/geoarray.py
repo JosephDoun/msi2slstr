@@ -13,8 +13,9 @@ class GeoArray(GeoArray):
 
     DEPRECATED
 
-    NOTE inefficient. Reading the Sentinel-2 image with :code:`dataset.ReadAsArray()`
-    is blocking and doubles memory usage during corregistration.
+    NOTE inefficient. Reading the Sentinel-2 image with
+    :code:`dataset.ReadAsArray()` is blocking and doubles memory usage during
+    corregistration.
     """
 
     def __init__(self, path_or_array: str | ndarray | GeoArray | Dataset,

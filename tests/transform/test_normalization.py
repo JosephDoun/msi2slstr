@@ -1,8 +1,8 @@
 import unittest
 
-from numpy import allclose, ones, zeros, arange
+from numpy import allclose, ones, zeros
 from numpy.random import rand, randn, randint
-from msi2slstr.transform.normalization import *
+from msi2slstr.transform.normalization import Normalizer, Standardizer
 
 
 class TestNormalizer(unittest.TestCase):
@@ -20,7 +20,7 @@ class TestNormalizer(unittest.TestCase):
         normal_means = scaled_array.mean((-1, -2))
         mean_ratio = means / normal_means
         self.assertTrue(allclose(mean_ratio, scale))
-    
+
     def test_offset(self):
         scale = ones(self.size[-3])
         offset = randn(self.size[-3])

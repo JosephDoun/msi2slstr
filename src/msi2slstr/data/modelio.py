@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from osgeo.gdal import Dataset
 from osgeo.gdal_array import NumericTypeCodeToGDALTypeCode
 from numpy import dtype, ndarray, float32
-from typing import Any, Sequence
+from typing import Sequence
 
 from .sentinel2 import Sentinel2L1C
 from .sentinel3 import Sentinel3SLSTR, Sentinel3RBT, Sentinel3LST
@@ -83,7 +83,8 @@ class ModelOutput:
         ...
 
 
-def get_array_coords_generator(t_size: int, sizex: int, sizey: int) -> Generator:
+def get_array_coords_generator(
+        t_size: int, sizex: int, sizey: int) -> Generator:
     """
     Returns a tuple of tile coordinates given the source image dimensions,
     tile size and array stride for sequential indexing.

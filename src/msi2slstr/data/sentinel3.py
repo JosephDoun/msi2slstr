@@ -76,7 +76,7 @@ class SEN3(Archive):
         _band_files = list(filter(condition, self.data_files))
         _band_files.sort(key=sorting)
 
-        assert len(_band_files) == len(self._bnames),\
+        assert len(_band_files) == len(self._bnames), \
             "Unexpected number of bands."
 
         self.bands = SEN3Bands(tuple(
@@ -156,7 +156,7 @@ class Sen3Name:
     def __post_init__(self):
         # Remove leading path if exists.
         self.file_name = split(self.file_name)[-1]
-        assert len(self.file_name) == get_sen3name_length(),\
+        assert len(self.file_name) == get_sen3name_length(), \
             f"{self.file_name} has unexpected length."
 
         self.file_name, sen3 = self.file_name.split(".")
