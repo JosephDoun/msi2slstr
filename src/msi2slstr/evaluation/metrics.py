@@ -7,7 +7,7 @@ from numpy import sqrt
 from ..transform.normalization import Standardizer
 
 
-class Pearson(ndarray):
+class corrcoef(ndarray):
     """
     Pearson coefficient numpy implementation.
 
@@ -16,13 +16,13 @@ class Pearson(ndarray):
             ...
         \\end{aligned}
     """
-    def __new__(cls, x: ndarray, y: ndarray) -> "Pearson":
+    def __new__(cls, x: ndarray, y: ndarray) -> "corrcoef":
         coef = corrcoef(x.flatten(), y.flatten())
         result = coef[0, 1]
         return result.view(cls)
 
 
-class SRMSE(ndarray):
+class srmse(ndarray):
     """
     Standardized RMSE.
 
@@ -34,14 +34,14 @@ class SRMSE(ndarray):
     standard: Standardizer = Standardizer((-1, -2))
 
     def __new__(cls, x: ndarray, y: ndarray,
-                dims: tuple[int] = (-1, -2)) -> "SRMSE":
+                dims: tuple[int] = (-1, -2)) -> "srmse":
         x = cls.standard(x)
         y = cls.standard(y)
         result = sqrt((x - y) ** 2).mean(axis=dims)
         return result.view(cls)
 
 
-class SSIM(ndarray):
+class ssim(ndarray):
     """
     Global SSIM. Collapses elements along :attr:`dims` of the provided arrays
     to calculate the metric for the elements that remain. Defaults to a
@@ -73,7 +73,7 @@ class SSIM(ndarray):
     _C = 1e-10
 
     def __new__(cls, x: ndarray, y: ndarray,
-                dims: tuple[int] = (-1, -2)) -> "SSIM":
+                dims: tuple[int] = (-1, -2)) -> "ssim":
         mx = x.mean(axis=dims, keepdims=True)
         my = y.mean(axis=dims, keepdims=True)
         sx = x. std(axis=dims, keepdims=True)
