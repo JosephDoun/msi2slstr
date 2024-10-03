@@ -21,7 +21,6 @@ class TestNormalizer(unittest.TestCase):
         mean_ratio = means / normal_means
         self.assertTrue(allclose(mean_ratio, scale))
 
-
     def test_offset(self):
         scale = ones(self.size[-3])
         offset = randn(self.size[-3])
