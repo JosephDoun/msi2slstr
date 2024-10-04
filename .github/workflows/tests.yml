@@ -21,6 +21,6 @@ jobs:
       - name: verify GDAL
         run: |
             python3 -c "import osgeo"
-      - name: run module tests
+      - name: run package tests
         run: |
             python3 -m unittest -v
