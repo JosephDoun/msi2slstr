@@ -43,6 +43,7 @@ class srmse(ndarray):
 
     def __new__(cls, x: ndarray, y: ndarray,
                 dims: tuple[int] = (-1, -2)) -> "srmse":
+
         x = cls.standard(x)
         y = cls.standard(y)
         result = sqrt((x - y) ** 2).mean(axis=dims)
@@ -82,6 +83,7 @@ class ssim(ndarray):
 
     def __new__(cls, x: ndarray, y: ndarray,
                 dims: tuple[int] = (-1, -2)) -> "ssim":
+
         mx = x.mean(axis=dims, keepdims=True)
         my = y.mean(axis=dims, keepdims=True)
         sx = x. std(axis=dims, keepdims=True)
