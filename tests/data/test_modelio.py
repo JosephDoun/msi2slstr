@@ -2,7 +2,6 @@ import unittest
 
 from msi2slstr.data.modelio import ModelOutput
 from msi2slstr.metadata.abc import Metadata
-from osgeo.gdal import Band
 
 
 class Meta(Metadata):
@@ -31,7 +30,7 @@ class TestModelOutput(unittest.TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        
+
     def test_metadata_write(self):
         self.data.write_metadata([
                 Meta({"test_metadata_key": "test_metadata_value"},
@@ -46,7 +45,7 @@ class TestModelOutput(unittest.TestCase):
             Meta({"test_band_metadata_key": "test"},
                  "TEST_BAND_DOMAIN")
         ])
-        
+
         self.assertTrue(self.data.dataset.GetRasterBand(3)
                         .GetMetadata("TEST_BAND_DOMAIN")
                         ["test_band_metadata_key"] == "s")

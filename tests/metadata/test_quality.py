@@ -8,7 +8,6 @@ from numpy import isclose
 
 
 class TestFusionQualityMetadata(unittest.TestCase):
-    
     data = ModelOutput(geotransform=(1, 1, 1, 1, 1, 1),
                        projection="",
                        name="/vsimem/test_quality.tif",
@@ -20,12 +19,12 @@ class TestFusionQualityMetadata(unittest.TestCase):
 
         for _ in range(10):
             self.meta.evaluate(a, a)
-        
+
         self.data.write_band_metadata([self.meta])
-        
+
         band_stats = self.data.dataset.GetRasterBand(2)\
             .GetMetadata("Fusion Quality")
-        
+
         self.assertTrue(isclose(float(band_stats['r']), 1))
         self.assertTrue(isclose(float(band_stats['srmse']), 0))
         self.assertTrue(isclose(float(band_stats['ssim']), 1))
