@@ -16,7 +16,8 @@ jobs:
           python-version: "3.11"
       - name: verify installation
         run: |
-            sudo apt-get update && sudo apt-get install gdal-bin libgdal-dev python3-gdal
+            sudo apt-get update && sudo apt-get install gdal-bin libgdal-dev
+            pip install numpy>1.0.0 wheel setuptools>=67
             pip install -U .
       - name: verify GDAL
         run: |
