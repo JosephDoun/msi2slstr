@@ -1,16 +1,25 @@
+from .abc import Metadata
+from ..evaluation.scene import Evaluate
+
+from numpy import ndarray
 
 
-class FusionQuality:
-    ...
+class FusionQualityMetadata(Metadata):
+    """
+    Sets the fusion quality metadata domain.
 
+    .. automethod:: __call__
+    """
+    def __init__(self) -> None:
+        self.__ev = Evaluate()
 
-class RSquared:
-    ...
+    @property
+    def domain(self):
+        return "Fusion Quality"
 
+    @property
+    def content(self):
+        return self.__ev.get_stats()
 
-class MAE:
-    ...
-
-
-class RMSE:
-    ...
+    def evaluate(self, x: ndarray, y: ndarray):
+        self.__ev(x, y)

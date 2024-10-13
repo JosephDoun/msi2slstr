@@ -23,7 +23,7 @@ def get_gdal_system_version():
 setup(name="msi2slstr",
       version=version.__version__,
       description=module.__doc__.strip(),
-      install_requires=[f"gdal=={get_gdal_system_version()}",
+      install_requires=[f"GDAL[numpy]=={get_gdal_system_version()}",
                         "pyproj==3.6.1",
                         "arosics==1.9.2",
                         "onnxruntime-gpu==1.19.2",

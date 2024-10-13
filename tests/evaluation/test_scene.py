@@ -1,6 +1,6 @@
 import unittest
 
-from numpy import float32
+from numpy import float32, allclose
 from numpy.random import randn
 from msi2slstr.evaluation.scene import Evaluate
 
@@ -31,3 +31,13 @@ class TestEvaluation(unittest.TestCase):
 
         for records in self.evaluate.metric_maps.values():
             self.assertEqual(len(records), 10 * self.a.shape[0])
+
+    def test_get_stats(self):
+        for _ in range(10):
+            self.evaluate(self.a, self.a)
+
+        stats = self.evaluate.get_stats()
+
+        self.assertTrue(allclose(stats['r'], 1))
+        self.assertTrue(allclose(stats['srmse'], 0))
+        self.assertTrue(allclose(stats['ssim'], 1))

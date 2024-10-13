@@ -66,21 +66,48 @@ class ModelOutput:
                                                             sizey=self.ysize
                                                             ).__next__
 
-    def write_tiles(self, load: ndarray):
+    def write_tiles(self, payload: ndarray):
         """
         Tile-writing method for 4D arrays containing N*3D tiles to be written
         to dataset.
 
-        :param load: 4D array of 3D tiles.
-        :param load: `numpy.ndarray`
+        :param payload: 4D array of 3D tiles.
+        :type payload: `numpy.ndarray`
         """
-        for tile in load:
+        for tile in payload:
             coords = self._coords_generator()
             self.dataset.WriteArray(tile, *coords[:2],
                                     range(1, self.nbands + 1),)
 
     def write_metadata(self, m_list: list[Metadata]):
-        ...
+        """
+        Write a list of metadata to the dataset.
+
+        :param m_list: List of metadata objects to write.
+        :type m_list: `list`
+        """
+        for metadata in m_list:
+            self.dataset.SetMetadata(metadata.content, metadata.domain)
+
+    def write_band_metadata(self, m_list: list[Metadata]):
+        """
+        Write metadata to each dataset band separately.
+
+        This method expects an array of values per metadata key,
+        of equal length as the count of rasters in the dataset.
+
+        :param m_list: List of metadata objects to write.
+        :type m_list: `list`
+        """
+        for metadata in m_list:
+            for key, band_values in metadata.content.items():
+                for nband, value in zip(range(1, self.dataset.RasterCount + 1),
+                                        band_values, strict=True):
+                    # SetMetadataItem needs to be used to
+                    # avoid overwriting domain.
+                    self.dataset.GetRasterBand(nband)\
+                                .SetMetadataItem(key, str(value),
+                                                 metadata.domain)
 
 
 def get_array_coords_generator(
