@@ -24,7 +24,7 @@ class ProductName(str):
 
     @classmethod
     def __format_product_name__(
-            cls, sen2name: Sen2Name, sen3name: Sen3Name) -> list[str]:
+            cls, sen2name: Sen2Name, sen3name: Sen3Name) -> str:
         """
         Returns an iterable of strings to include in the output file name.
         """

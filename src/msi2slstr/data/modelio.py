@@ -106,7 +106,8 @@ class ModelOutput:
                     # SetMetadataItem needs to be used to
                     # avoid overwriting domain.
                     self.dataset.GetRasterBand(nband)\
-                                .SetMetadataItem(key, str(value), metadata.domain)
+                                .SetMetadataItem(key, str(value),
+                                                 metadata.domain)
 
 
 def get_array_coords_generator(
