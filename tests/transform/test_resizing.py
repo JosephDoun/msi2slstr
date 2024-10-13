@@ -1,6 +1,5 @@
 import unittest
 
-from numpy.random import randn
 from numpy import array
 from numpy import allclose
 
@@ -19,7 +18,7 @@ class Test_ValidAverageDownsampling(unittest.TestCase):
                 ]
             ]]
         )
-    
+
     def test_down_shape(self):
         data = self.down(self.data)
         self.assertTrue(data.shape == (1, 1, 2, 2))
