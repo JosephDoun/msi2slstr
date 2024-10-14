@@ -23,7 +23,7 @@ class TestFusionQualityMetadata(unittest.TestCase):
         self.data.write_band_metadata([self.meta])
 
         band_stats = self.data.dataset.GetRasterBand(2)\
-            .GetMetadata("Fusion Quality")
+            .GetMetadata()
 
         self.assertTrue(isclose(float(band_stats['r']), 1))
         self.assertTrue(isclose(float(band_stats['srmse']), 0))
