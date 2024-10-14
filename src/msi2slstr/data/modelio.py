@@ -87,7 +87,7 @@ class ModelOutput:
         :type m_list: `list`
         """
         for metadata in m_list:
-            self.dataset.SetMetadata(metadata.content, metadata.domain)
+            self.dataset.SetMetadata(metadata.content)
 
     def write_band_metadata(self, m_list: list[Metadata]):
         """
@@ -106,8 +106,7 @@ class ModelOutput:
                     # SetMetadataItem needs to be used to
                     # avoid overwriting domain.
                     self.dataset.GetRasterBand(nband)\
-                                .SetMetadataItem(key, str(value),
-                                                 metadata.domain)
+                                .SetMetadataItem(key, str(value))
 
 
 def get_array_coords_generator(
