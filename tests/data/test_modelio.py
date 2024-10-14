@@ -34,20 +34,20 @@ class TestModelOutput(unittest.TestCase):
     def test_metadata_write(self):
         self.data.write_metadata([
                 Meta({"test_metadata_key": "test_metadata_value"},
-                     "TEST_DOMAIN")
+                     "")
             ])
 
-        self.assertTrue("TEST_DOMAIN" in
-                        self.data.dataset.GetMetadataDomainList())
+        self.assertTrue("test_metadata_key" in
+                        self.data.dataset.GetMetadata().keys())
 
     def test_band_metadata_write_success(self):
         self.data.write_band_metadata(m_list=[
             Meta({"test_band_metadata_key": "test"},
-                 "TEST_BAND_DOMAIN")
+                 "")
         ])
 
         self.assertTrue(self.data.dataset.GetRasterBand(3)
-                        .GetMetadata("TEST_BAND_DOMAIN")
+                        .GetMetadata()
                         ["test_band_metadata_key"] == "s")
 
     def test_band_metadata_write_incompatible(self):

@@ -74,6 +74,7 @@ def main(args=args):
 
         output.write_tiles(Y_hat)
 
+    # Write collected metadata of fusion quality.
     output.write_band_metadata([qualitymeta])
 
     return 0

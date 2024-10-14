@@ -15,7 +15,7 @@ class FusionQualityMetadata(Metadata):
 
     @property
     def domain(self):
-        return "Fusion Quality"
+        return ""
 
     @property
     def content(self):
