@@ -2,6 +2,7 @@ name: tests
 run-name: tests // ${{ github.actor }} // ${{ github.event_name }} // ${{ github.ref_name }}
 on:
   pull_request:
+    paths: ["**.py", src/, tests/]
   push:
     branches: ["main", "development"]
     paths: ["**.py", src/, tests/]
