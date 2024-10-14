@@ -1,6 +1,6 @@
 """Module for the evaluation of a full satellite scene.
 """
-from numpy import array, ndarray
+from numpy import stack, ndarray
 
 from .metrics import ssim
 from .metrics import srmse
@@ -38,17 +38,14 @@ class Evaluate:
 
             self._counter += 1
 
-    def __repr__(self) -> str:
-        return "\n".join([f"{key}: {array(value).mean()}"
-                          for key, value in self.metric_maps])
-
-    def __str__(self) -> str:
-        return self.__repr__()
-
     @property
     def quality_maps(self):
         """
         Returns a 2D array per metric that maps fusion quality to the scene's
-        geometry.
+        geometry. TODO
         """
         ...
+
+    def get_stats(self, agg="mean"):
+        return {k: getattr(stack(v, axis=0), agg)(0)
+                for k, v in self.metric_maps.items()}

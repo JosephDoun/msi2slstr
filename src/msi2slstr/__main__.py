@@ -7,7 +7,9 @@ from .data.modelio import ModelInput, ModelOutput
 from .data.modelio import TileGenerator, TileDispatcher
 from .data.dataclasses import Dir
 from .transform.preprocessing import DataPreprocessor
+from .transform.resizing import ValidAverageDownsampling
 from .metadata.naming import ProductName
+from .metadata.quality import FusionQualityMetadata
 from .model import Runtime
 
 
@@ -58,16 +60,21 @@ def main(args=args):
                          t_size=500)
     model = Runtime()
     preprocess = DataPreprocessor()
+    qualitymeta = FusionQualityMetadata()
+    downscale = ValidAverageDownsampling(50)
 
     for sen2tile, sen3tile in tqdm(data, desc="Fusing data..."):
         sen2tile, sen3tile = preprocess(sen2tile, sen3tile)
         Y_hat = model(sen2tile, sen3tile)[0]
         Y_hat = preprocess.reset_value_range(Y_hat)
+
+        # Y_hat needs to be downscaled
+        # to evaluate energy balance.
+        qualitymeta.evaluate(sen3tile, downscale(Y_hat))
+
         output.write_tiles(Y_hat)
 
-    output.write_metadata([
-        ...
-    ])
+    output.write_band_metadata([qualitymeta])
 
     return 0
 

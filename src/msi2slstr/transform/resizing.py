@@ -21,10 +21,10 @@ class ValidAverageDownsampling:
                               shape[2] // self.scale,
                               self.scale,
                               shape[3] // self.scale,
-                              self.scale).swapaxes(2, 1)
+                              self.scale).swapaxes(-2, -3)
         _sum = array.sum((-1, -2))
-        _nzero = (array > 0).sum((-1, -2))
-        return _sum / (_nzero + 1e-10)
+        _nzerocount = (array > 0).sum((-1, -2))
+        return _sum / (_nzerocount + 1e-10)
 
 
 class NearestNeighbourUpsampling:
