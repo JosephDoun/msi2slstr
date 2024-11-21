@@ -4,7 +4,7 @@ on:
     branches:
       - model-release
     paths:
-      - src/msi2slstr/resoures/model.onnx;
+      - src/msi2slstr/resources/model.onnx;
   workflow_dispatch:
 jobs:
   create_pull_request:
