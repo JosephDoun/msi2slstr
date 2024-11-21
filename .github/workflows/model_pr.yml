@@ -1,11 +1,11 @@
 name: Pull request for updated model.
 on:
-  push:
-    branches:
-      - model-release
-    paths:
-      - src/msi2slstr/resources/model.onnx;
-  workflow_dispatch:
+    workflow_dispatch:
+    push:
+        branches:
+            - model-release
+        paths:
+            - src/msi2slstr/resources/model.onnx;
 jobs:
   create_pull_request:
     name: 'Create PR'
