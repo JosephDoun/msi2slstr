@@ -4,6 +4,7 @@ on:
     push:
         branches:
             - model-release
+            - ci/auto-pr
         paths:
             - src/msi2slstr/resources/model.onnx;
 jobs:
