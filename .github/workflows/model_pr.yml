@@ -6,14 +6,15 @@ on:
             - model-release
             - ci/auto-pr
         paths:
-            - src/msi2slstr/resources/model.onnx;
+            - src/msi2slstr/resources/model.onnx
+            - .github/**
+permissions:
+    pull-requests: write
 jobs:
   create_pull_request:
     name: 'Create PR'
-    if: github.ref == 'refs/heads/model-release'
+    # if: github.ref == 'refs/heads/model-release'
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
     steps:
       - name: Checkout model-release branch.
         uses: actions/checkout@v4
