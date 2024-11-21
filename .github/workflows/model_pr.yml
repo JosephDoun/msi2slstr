@@ -29,7 +29,7 @@ jobs:
             const pulls = await github.rest.pulls.list({
               owner: owner,
               repo: repo,
-              head: context.ref,
+              head: 'model-release',
               base: 'main',
               state: 'open',
             });
@@ -56,6 +56,7 @@ jobs:
                 pull_number: result.number,
                 body: [
                   result.body,
+                  '--',
                   `Updated by Job ${context.job}`,
                 ].join('\n'),
               });
@@ -68,5 +69,5 @@ jobs:
               owner,
               repo,
               issue_number: issue_number,
-              labels: ['test', 'automated pr']
+              labels: ['automated pr']
             });
