@@ -27,7 +27,7 @@ jobs:
             exit -1;
           else
             echo Updating version file.
-            echo "__version__ = $__version__" > version.py
+            echo "__version__ = \"$__version__\"" > version.py
           fi
 
         env:
