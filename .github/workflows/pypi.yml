@@ -27,6 +27,6 @@ jobs:
           pip install numpy>1.0.0 wheel setuptools>=67
           pip install -U .
       - name: Build wheel.
-        run: 
+        run: echo "Build wheel."
       - name: Upload wheel.
         run: pip install -U twine
