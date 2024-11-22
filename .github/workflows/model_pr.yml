@@ -1,19 +1,17 @@
-name: Pull request for updated model.
+name: Pull request for model release
 on:
     workflow_dispatch:
     push:
         branches:
             - model-release
-            - ci/auto-pr
         paths:
             - src/msi2slstr/resources/model.onnx
-            - .github/**
 permissions:
     pull-requests: write
 jobs:
   create_pull_request:
     name: 'Create PR'
-    # if: github.ref == 'refs/heads/model-release'
+    if: github.ref == 'refs/heads/model-release'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout model-release branch.
