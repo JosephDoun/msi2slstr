@@ -1,15 +1,42 @@
-name: pypi
-run-name: pypi-deployment // ${{ github.actor }} // ${{ github.event_name }} // ${{ github.ref_name }}
+name: pypi release
+run-name: >
+  pypi-deployment // 
+  ${{ github.actor }} // 
+  ${{ github.event_name }} // 
+  ${{ github.ref_name }}
 on:
   release:
     types: ["published"]
   workflow_dispatch:
 jobs:
-  build:
+  pypi_deployment:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -U twine
+      - name: Mark version.
+        run: |
+          __version__=$(echo $VERSION | \
+            grep -Eo [0-9]+\\.[0-9]+[\\.a-z]+[0-9]+)
+
+          if [ -z $__version__ ];
+          then
+            exit -1;
+          else
+            echo Updating version file.
+            echo "__version__ = \"$__version__\"" > version.py
+          fi
+
+        env:
+          VERSION: ${{ github.event.release.tag_name }}
+      - name: Verify installation.
+        run: |
+          sudo apt-get update && sudo apt-get install gdal-bin libgdal-dev
+          pip install numpy>1.0.0 wheel setuptools>=67
+          pip install -U .
+      - name: Build wheel.
+        run: echo "Build wheel."
+      - name: Upload wheel.
+        run: pip install -U twine
