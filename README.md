@@ -14,6 +14,11 @@ AI assisted data fusion software for Sentinel-2 L1C and Sentinel-3 SLSTR Level 1
 *Under development.*
 
 
+Related repositories:
+
+1. [msi2slstr-training-environment](https://github.com/josephdoun/msi2slstr-training-lightning-implementation)
+2. [msi2slstr-datagen](https://github.com/josephdoun/msi2slstr-datagen)
+
 
 #### How to cite:
 
